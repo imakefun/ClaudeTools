@@ -811,6 +811,13 @@
           <div class="toolbar-separator"></div>
 
           <div class="toolbar-group">
+            <input type="text" class="toolbar-input" id="removeAfterInput" placeholder="e.g. ___" style="width:80px">
+            <button class="toolbar-btn" id="btnRemoveAfter" title="Remove everything after (and including) the given string">Remove After</button>
+          </div>
+
+          <div class="toolbar-separator"></div>
+
+          <div class="toolbar-group">
             <input type="text" class="toolbar-input" id="patternInput" placeholder="Pattern prefix..." style="width:100px">
             <button class="toolbar-btn" id="btnApplyPattern" title="Set all names to prefix_001, prefix_002, ...">Apply Pattern</button>
           </div>
@@ -893,6 +900,8 @@
       const findInput = document.getElementById("findInput");
       const replaceInput = document.getElementById("replaceInput");
       const btnFindReplace = document.getElementById("btnFindReplace");
+      const removeAfterInput = document.getElementById("removeAfterInput");
+      const btnRemoveAfter = document.getElementById("btnRemoveAfter");
       const patternInput = document.getElementById("patternInput");
       const btnApplyPattern = document.getElementById("btnApplyPattern");
       const btnResetNames = document.getElementById("btnResetNames");
@@ -1213,6 +1222,18 @@
         const replace = replaceInput.value;
         const names = getExportNames();
         setExportNames(names.map((n) => n.split(find).join(replace)));
+        updateDetectedPrefix();
+      });
+
+      // --- Remove After ---
+      btnRemoveAfter.addEventListener("click", () => {
+        const marker = removeAfterInput.value;
+        if (!marker) return;
+        const names = getExportNames();
+        setExportNames(names.map((n) => {
+          const idx = n.indexOf(marker);
+          return idx !== -1 ? (n.slice(0, idx) || n) : n;
+        }));
         updateDetectedPrefix();
       });
 
