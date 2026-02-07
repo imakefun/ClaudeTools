@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Batch Processor - ClaudeTools</title>
+  <meta name="description" content="Batch resize, rename, and export images to a uniform size and format for game assets.">
+  <link rel="stylesheet" href="../../css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    /* ===== Tool-specific styles ===== */
+    .app-container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 1.5rem 2rem 4rem;
+      width: 100%;
+    }
+
+    .app-container h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .app-container .subtitle {
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+    }
+
+    /* Drop zone */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-lg);
+      padding: 3rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      margin-bottom: 1.5rem;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+      border-color: var(--accent);
+      background: var(--accent-subtle);
+    }
+
+    .drop-zone h3 {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .drop-zone p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .drop-zone input[type="file"] {
+      display: none;
+    }
+
+    /* Panels */
+    .panels {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 800px) {
+      .panels {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+    }
+
+    .panel h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Image list */
+    .image-list {
+      max-height: 480px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .image-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .image-list::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    .image-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem;
+      border-radius: var(--radius);
+      background: var(--bg-secondary);
+      border: 1px solid transparent;
+    }
+
+    .image-item:hover {
+      border-color: var(--border);
+    }
+
+    .image-thumb {
+      width: 48px;
+      height: 48px;
+      object-fit: cover;
+      border-radius: 4px;
+      background: var(--bg-primary);
+      flex-shrink: 0;
+    }
+
+    .image-info {
+      flex-grow: 1;
+      min-width: 0;
+    }
+
+    .image-name {
+      font-size: 0.85rem;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .image-dims {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .image-remove {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 0.25rem;
+      line-height: 1;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .image-remove:hover {
+      color: #f85149;
+      background: rgba(248, 81, 73, 0.1);
+    }
+
+    .list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .list-header h2 {
+      border: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .clear-all {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      background: none;
+      border: 1px solid var(--border);
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .clear-all:hover {
+      color: #f85149;
+      border-color: #f85149;
+    }
+
+    /* Settings controls */
+    .control-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .control-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .control-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 0.4rem;
+      color: var(--text-secondary);
+    }
+
+    .control-group input[type="number"],
+    .control-group input[type="text"],
+    .control-group select {
+      width: 100%;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.5rem 0.75rem;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      font-family: inherit;
+    }
+
+    .control-group input:focus,
+    .control-group select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .size-inputs {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .size-inputs input {
+      flex: 1;
+    }
+
+    .size-inputs .x-label {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    .detected-size {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+    }
+
+    .detected-size button {
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font-size: 0.78rem;
+      padding: 0;
+      text-decoration: underline;
+    }
+
+    .detected-size button:hover {
+      color: var(--accent-hover);
+    }
+
+    .quality-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .quality-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+    }
+
+    .quality-val {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      min-width: 2.5rem;
+      text-align: right;
+    }
+
+    .rename-preview {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+      font-family: monospace;
+    }
+
+    /* Fit mode */
+    .fit-options {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .fit-option {
+      flex: 1;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.5rem;
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .fit-option:hover {
+      border-color: var(--text-muted);
+    }
+
+    .fit-option.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-subtle);
+    }
+
+    .fit-option-label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.15rem;
+      font-size: 0.85rem;
+    }
+
+    /* BG color for contain */
+    .bg-color-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .bg-color-row input[type="color"] {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: none;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .bg-color-row span {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+    }
+
+    /* Process button */
+    .process-btn {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 1.25rem;
+    }
+
+    .process-btn:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .process-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Progress */
+    .progress-bar-container {
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .progress-bar-container.visible {
+      display: block;
+    }
+
+    .progress-bar-outer {
+      background: var(--bg-primary);
+      border-radius: 999px;
+      height: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .progress-bar-inner {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 999px;
+      transition: width 0.15s;
+      width: 0%;
+    }
+
+    .progress-text {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+      text-align: center;
+    }
+
+    /* Hidden state */
+    .hidden {
+      display: none !important;
+    }
+
+    /* Summary bar */
+    .summary-bar {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .summary-stat {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .summary-stat strong {
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../" class="site-logo">
+        <span class="logo-icon">&#9881;</span>
+        ClaudeTools
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="../../#tools">Tools</a></li>
+          <li><a href="https://github.com/imakefun/ClaudeTools">GitHub</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="app-container">
+    <h1>Image Batch Processor</h1>
+    <p class="subtitle">Resize, rename, and export up to 200 images to a uniform size and format.</p>
+
+    <!-- Drop Zone -->
+    <div class="drop-zone" id="dropZone">
+      <h3>Drop images here or click to browse</h3>
+      <p>Supports PNG, JPG, JPEG, WEBP, BMP, GIF, SVG &mdash; up to 200 images</p>
+      <input type="file" id="fileInput" multiple accept="image/*">
+    </div>
+
+    <!-- Main panels (hidden until images are added) -->
+    <div class="panels hidden" id="mainPanels">
+
+      <!-- Left: Image list -->
+      <div class="panel">
+        <div class="list-header">
+          <h2>Images <span id="imageCountLabel">(0)</span></h2>
+          <button class="clear-all" id="clearAllBtn">Clear all</button>
+        </div>
+
+        <div class="summary-bar" id="summaryBar">
+          <span class="summary-stat">Widths: <strong id="statWidths">-</strong></span>
+          <span class="summary-stat">Heights: <strong id="statHeights">-</strong></span>
+          <span class="summary-stat">Formats: <strong id="statFormats">-</strong></span>
+        </div>
+
+        <div class="image-list" id="imageList"></div>
+      </div>
+
+      <!-- Right: Settings -->
+      <div class="panel">
+        <h2>Output Settings</h2>
+
+        <!-- Target size -->
+        <div class="control-group">
+          <label>Target Size (px)</label>
+          <div class="size-inputs">
+            <input type="number" id="targetWidth" min="1" max="8192" placeholder="Width">
+            <span class="x-label">&times;</span>
+            <input type="number" id="targetHeight" min="1" max="8192" placeholder="Height">
+          </div>
+          <div class="detected-size" id="detectedSize"></div>
+        </div>
+
+        <!-- Fit mode -->
+        <div class="control-group">
+          <label>Fit Mode</label>
+          <div class="fit-options">
+            <div class="fit-option active" data-mode="cover">
+              <span class="fit-option-label">Cover</span>
+              Fill &amp; crop
+            </div>
+            <div class="fit-option" data-mode="contain">
+              <span class="fit-option-label">Contain</span>
+              Fit &amp; pad
+            </div>
+          </div>
+          <div class="bg-color-row hidden" id="bgColorRow">
+            <input type="color" id="bgColor" value="#000000">
+            <span>Background fill color</span>
+          </div>
+        </div>
+
+        <!-- Export format -->
+        <div class="control-group">
+          <label>Export Format</label>
+          <select id="exportFormat">
+            <option value="image/png">PNG</option>
+            <option value="image/jpeg">JPG</option>
+            <option value="image/webp">WEBP</option>
+          </select>
+        </div>
+
+        <!-- Quality (for JPG/WEBP) -->
+        <div class="control-group" id="qualityGroup">
+          <label>Quality</label>
+          <div class="quality-row">
+            <input type="range" id="qualitySlider" min="10" max="100" value="92">
+            <span class="quality-val" id="qualityVal">92%</span>
+          </div>
+        </div>
+
+        <!-- Rename pattern -->
+        <div class="control-group">
+          <label>Rename Pattern</label>
+          <input type="text" id="renamePattern" placeholder="e.g. sprite" value="">
+          <div class="rename-preview" id="renamePreview">Leave empty to keep original names</div>
+        </div>
+
+        <!-- Start index -->
+        <div class="control-group">
+          <label>Start Number</label>
+          <input type="number" id="startIndex" min="0" value="1">
+        </div>
+
+        <!-- Process button -->
+        <button class="process-btn" id="processBtn" disabled>Process &amp; Download ZIP</button>
+
+        <div class="progress-bar-container" id="progressContainer">
+          <div class="progress-bar-outer">
+            <div class="progress-bar-inner" id="progressBar"></div>
+          </div>
+          <div class="progress-text" id="progressText">0 / 0</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>ClaudeTools &mdash; built one tool at a time.</p>
+  </footer>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const MAX_IMAGES = 200;
+
+      // State
+      let images = []; // { file, name, width, height, objectUrl }
+      let fitMode = "cover";
+
+      // DOM refs
+      const dropZone = document.getElementById("dropZone");
+      const fileInput = document.getElementById("fileInput");
+      const mainPanels = document.getElementById("mainPanels");
+      const imageList = document.getElementById("imageList");
+      const imageCountLabel = document.getElementById("imageCountLabel");
+      const clearAllBtn = document.getElementById("clearAllBtn");
+      const targetWidth = document.getElementById("targetWidth");
+      const targetHeight = document.getElementById("targetHeight");
+      const detectedSize = document.getElementById("detectedSize");
+      const exportFormat = document.getElementById("exportFormat");
+      const qualityGroup = document.getElementById("qualityGroup");
+      const qualitySlider = document.getElementById("qualitySlider");
+      const qualityVal = document.getElementById("qualityVal");
+      const renamePattern = document.getElementById("renamePattern");
+      const startIndex = document.getElementById("startIndex");
+      const renamePreview = document.getElementById("renamePreview");
+      const processBtn = document.getElementById("processBtn");
+      const progressContainer = document.getElementById("progressContainer");
+      const progressBar = document.getElementById("progressBar");
+      const progressText = document.getElementById("progressText");
+      const bgColorRow = document.getElementById("bgColorRow");
+      const bgColor = document.getElementById("bgColor");
+      const statWidths = document.getElementById("statWidths");
+      const statHeights = document.getElementById("statHeights");
+      const statFormats = document.getElementById("statFormats");
+      const fitOptions = document.querySelectorAll(".fit-option");
+
+      // ===== File Handling =====
+
+      dropZone.addEventListener("click", () => fileInput.click());
+      fileInput.addEventListener("change", (e) => addFiles(e.target.files));
+
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("drag-over");
+      });
+      dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("drag-over");
+        addFiles(e.dataTransfer.files);
+      });
+
+      async function addFiles(fileList) {
+        const files = Array.from(fileList).filter((f) => f.type.startsWith("image/"));
+        const space = MAX_IMAGES - images.length;
+        const toAdd = files.slice(0, space);
+
+        if (files.length > space) {
+          alert(`Only ${space} more image(s) can be added (max ${MAX_IMAGES}).`);
+        }
+
+        const promises = toAdd.map((file) => loadImage(file));
+        const loaded = await Promise.all(promises);
+        images.push(...loaded.filter(Boolean));
+        refresh();
+      }
+
+      function loadImage(file) {
+        return new Promise((resolve) => {
+          const url = URL.createObjectURL(file);
+          const img = new Image();
+          img.onload = () => {
+            resolve({
+              file,
+              name: file.name,
+              width: img.naturalWidth,
+              height: img.naturalHeight,
+              objectUrl: url,
+            });
+          };
+          img.onerror = () => {
+            URL.revokeObjectURL(url);
+            resolve(null);
+          };
+          img.src = url;
+        });
+      }
+
+      // ===== UI Refresh =====
+
+      function refresh() {
+        mainPanels.classList.toggle("hidden", images.length === 0);
+        imageCountLabel.textContent = `(${images.length})`;
+        processBtn.disabled = images.length === 0;
+        renderList();
+        computeStats();
+        computeOptimalSize();
+        updateRenamePreview();
+      }
+
+      function renderList() {
+        imageList.innerHTML = "";
+        images.forEach((img, i) => {
+          const el = document.createElement("div");
+          el.className = "image-item";
+          el.innerHTML = `
+            <img class="image-thumb" src="${img.objectUrl}" alt="">
+            <div class="image-info">
+              <div class="image-name" title="${img.name}">${img.name}</div>
+              <div class="image-dims">${img.width} &times; ${img.height}</div>
+            </div>
+            <button class="image-remove" title="Remove">&times;</button>
+          `;
+          el.querySelector(".image-remove").addEventListener("click", () => {
+            URL.revokeObjectURL(images[i].objectUrl);
+            images.splice(i, 1);
+            refresh();
+          });
+          imageList.appendChild(el);
+        });
+      }
+
+      function computeStats() {
+        if (images.length === 0) return;
+        const widths = [...new Set(images.map((i) => i.width))].sort((a, b) => a - b);
+        const heights = [...new Set(images.map((i) => i.height))].sort((a, b) => a - b);
+        const formats = [...new Set(images.map((i) => {
+          const ext = i.name.split(".").pop().toLowerCase();
+          return ext;
+        }))].sort();
+
+        statWidths.textContent = widths.length <= 3
+          ? widths.join(", ") + "px"
+          : `${widths[0]}–${widths[widths.length - 1]}px (${widths.length} unique)`;
+        statHeights.textContent = heights.length <= 3
+          ? heights.join(", ") + "px"
+          : `${heights[0]}–${heights[heights.length - 1]}px (${heights.length} unique)`;
+        statFormats.textContent = formats.join(", ").toUpperCase();
+      }
+
+      function computeOptimalSize() {
+        if (images.length === 0) return;
+        const minW = Math.min(...images.map((i) => i.width));
+        const minH = Math.min(...images.map((i) => i.height));
+
+        // Only auto-fill if user hasn't manually typed something
+        if (!targetWidth.dataset.userSet) targetWidth.value = minW;
+        if (!targetHeight.dataset.userSet) targetHeight.value = minH;
+
+        detectedSize.innerHTML = `Suggested: ${minW} &times; ${minH} (no upscaling) &mdash; <button id="applySuggested">apply</button>`;
+        document.getElementById("applySuggested").addEventListener("click", () => {
+          targetWidth.value = minW;
+          targetHeight.value = minH;
+          delete targetWidth.dataset.userSet;
+          delete targetHeight.dataset.userSet;
+        });
+      }
+
+      // Track manual edits to size fields
+      targetWidth.addEventListener("input", () => { targetWidth.dataset.userSet = "1"; });
+      targetHeight.addEventListener("input", () => { targetHeight.dataset.userSet = "1"; });
+
+      // ===== Fit Mode =====
+
+      fitOptions.forEach((opt) => {
+        opt.addEventListener("click", () => {
+          fitOptions.forEach((o) => o.classList.remove("active"));
+          opt.classList.add("active");
+          fitMode = opt.dataset.mode;
+          bgColorRow.classList.toggle("hidden", fitMode !== "contain");
+        });
+      });
+
+      // ===== Format / Quality =====
+
+      exportFormat.addEventListener("change", () => {
+        const fmt = exportFormat.value;
+        qualityGroup.style.display = fmt === "image/png" ? "none" : "";
+      });
+      // Initial state
+      qualityGroup.style.display = exportFormat.value === "image/png" ? "none" : "";
+
+      qualitySlider.addEventListener("input", () => {
+        qualityVal.textContent = qualitySlider.value + "%";
+      });
+
+      // ===== Rename Preview =====
+
+      renamePattern.addEventListener("input", updateRenamePreview);
+      startIndex.addEventListener("input", updateRenamePreview);
+
+      function updateRenamePreview() {
+        const pattern = renamePattern.value.trim();
+        const start = parseInt(startIndex.value, 10) || 0;
+        const ext = formatToExt(exportFormat.value);
+        if (!pattern) {
+          renamePreview.textContent = "Leave empty to keep original names";
+          return;
+        }
+        const pad = String(start + Math.max(images.length - 1, 0)).length;
+        const ex1 = pattern + "_" + String(start).padStart(pad, "0") + ext;
+        const ex2 = pattern + "_" + String(start + 1).padStart(pad, "0") + ext;
+        renamePreview.textContent = `e.g. ${ex1}, ${ex2}, ...`;
+      }
+
+      exportFormat.addEventListener("change", updateRenamePreview);
+
+      function formatToExt(mime) {
+        if (mime === "image/png") return ".png";
+        if (mime === "image/jpeg") return ".jpg";
+        if (mime === "image/webp") return ".webp";
+        return ".png";
+      }
+
+      // ===== Clear All =====
+
+      clearAllBtn.addEventListener("click", () => {
+        images.forEach((i) => URL.revokeObjectURL(i.objectUrl));
+        images = [];
+        delete targetWidth.dataset.userSet;
+        delete targetHeight.dataset.userSet;
+        refresh();
+      });
+
+      // ===== Process =====
+
+      processBtn.addEventListener("click", processImages);
+
+      async function processImages() {
+        const w = parseInt(targetWidth.value, 10);
+        const h = parseInt(targetHeight.value, 10);
+        if (!w || !h || w < 1 || h < 1) {
+          alert("Please enter a valid target width and height.");
+          return;
+        }
+
+        const fmt = exportFormat.value;
+        const quality = fmt === "image/png" ? undefined : parseInt(qualitySlider.value, 10) / 100;
+        const ext = formatToExt(fmt);
+        const pattern = renamePattern.value.trim();
+        const start = parseInt(startIndex.value, 10) || 0;
+        const pad = String(start + images.length - 1).length;
+        const bg = bgColor.value;
+
+        processBtn.disabled = true;
+        progressContainer.classList.add("visible");
+
+        const zip = new JSZip();
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+
+        for (let i = 0; i < images.length; i++) {
+          progressBar.style.width = ((i / images.length) * 100) + "%";
+          progressText.textContent = `${i} / ${images.length}`;
+
+          const img = await createImageBitmap(images[i].file);
+
+          // Clear canvas
+          ctx.clearRect(0, 0, w, h);
+
+          if (fitMode === "contain") {
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, w, h);
+            const scale = Math.min(w / img.width, h / img.height);
+            const sw = img.width * scale;
+            const sh = img.height * scale;
+            ctx.drawImage(img, (w - sw) / 2, (h - sh) / 2, sw, sh);
+          } else {
+            // cover: fill target, crop overflow
+            const scale = Math.max(w / img.width, h / img.height);
+            const sw = img.width * scale;
+            const sh = img.height * scale;
+            ctx.drawImage(img, (w - sw) / 2, (h - sh) / 2, sw, sh);
+          }
+
+          img.close();
+
+          // Export canvas to blob
+          const blob = await new Promise((resolve) => canvas.toBlob(resolve, fmt, quality));
+
+          // Filename
+          let filename;
+          if (pattern) {
+            filename = pattern + "_" + String(start + i).padStart(pad, "0") + ext;
+          } else {
+            const origBase = images[i].name.replace(/\.[^.]+$/, "");
+            filename = origBase + ext;
+          }
+
+          zip.file(filename, blob);
+        }
+
+        progressBar.style.width = "100%";
+        progressText.textContent = `${images.length} / ${images.length} — zipping...`;
+
+        const zipBlob = await zip.generateAsync({ type: "blob" });
+
+        // Trigger download
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(zipBlob);
+        a.download = (pattern || "images") + "_batch.zip";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(a.href);
+
+        progressText.textContent = "Done!";
+        processBtn.disabled = false;
+
+        setTimeout(() => {
+          progressContainer.classList.remove("visible");
+          progressBar.style.width = "0%";
+        }, 3000);
+      }
+
+      // ===== Init =====
+      refresh();
+    })();
+  </script>
+
+</body>
+</html>
