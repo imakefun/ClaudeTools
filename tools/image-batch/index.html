@@ -61,7 +61,7 @@
     /* Panels */
     .panels {
       display: grid;
-      grid-template-columns: 1fr 320px;
+      grid-template-columns: 1fr 340px;
       gap: 1.5rem;
       align-items: start;
     }
@@ -89,7 +89,7 @@
 
     /* Image list */
     .image-list {
-      max-height: 480px;
+      max-height: 400px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
@@ -120,8 +120,8 @@
     }
 
     .image-thumb {
-      width: 48px;
-      height: 48px;
+      width: 40px;
+      height: 40px;
       object-fit: cover;
       border-radius: 4px;
       background: var(--bg-primary);
@@ -134,7 +134,7 @@
     }
 
     .image-name {
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 500;
       white-space: nowrap;
       overflow: hidden;
@@ -142,7 +142,7 @@
     }
 
     .image-dims {
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       color: var(--text-muted);
     }
 
@@ -283,13 +283,6 @@
       text-align: right;
     }
 
-    .rename-preview {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      margin-top: 0.35rem;
-      font-family: monospace;
-    }
-
     /* Fit mode */
     .fit-options {
       display: flex;
@@ -326,7 +319,6 @@
       font-size: 0.85rem;
     }
 
-    /* BG color for contain */
     .bg-color-row {
       display: flex;
       align-items: center;
@@ -347,6 +339,261 @@
     .bg-color-row span {
       font-size: 0.82rem;
       color: var(--text-secondary);
+    }
+
+    /* Mode toggle */
+    .mode-toggle {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .mode-option {
+      flex: 1;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.5rem;
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .mode-option:hover {
+      border-color: var(--text-muted);
+    }
+
+    .mode-option.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-subtle);
+    }
+
+    .mode-option-label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.15rem;
+      font-size: 0.85rem;
+    }
+
+    .settings-dimmed {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    /* Summary bar */
+    .summary-bar {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .summary-stat {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .summary-stat strong {
+      color: var(--text-primary);
+    }
+
+    /* ===== Rename Panel (full width below) ===== */
+    .rename-panel {
+      margin-top: 1.5rem;
+    }
+
+    .rename-panel h2 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .rename-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .rename-toolbar .toolbar-group {
+      display: flex;
+      gap: 0.35rem;
+      align-items: center;
+    }
+
+    .rename-toolbar .toolbar-separator {
+      width: 1px;
+      height: 24px;
+      background: var(--border);
+      margin: 0 0.25rem;
+    }
+
+    .toolbar-btn {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.35rem 0.7rem;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .toolbar-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .toolbar-btn.accent {
+      background: var(--accent-subtle);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .toolbar-btn.accent:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .toolbar-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .toolbar-btn:disabled:hover {
+      border-color: var(--border);
+      color: var(--text-secondary);
+    }
+
+    .toolbar-input {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.35rem 0.6rem;
+      color: var(--text-primary);
+      font-size: 0.8rem;
+      width: 120px;
+      font-family: inherit;
+    }
+
+    .toolbar-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .toolbar-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .detected-prefix {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+      font-family: monospace;
+    }
+
+    .detected-prefix code {
+      background: var(--bg-primary);
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+      color: var(--orange);
+    }
+
+    /* Rename table */
+    .rename-table {
+      max-height: 520px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .rename-table::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .rename-table::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    .rename-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.4rem 0.5rem;
+      background: var(--bg-secondary);
+      border-radius: var(--radius);
+      border: 1px solid transparent;
+    }
+
+    .rename-row:hover {
+      border-color: var(--border);
+    }
+
+    .rename-row .rn-thumb {
+      width: 36px;
+      height: 36px;
+      object-fit: cover;
+      border-radius: 4px;
+      background: var(--bg-primary);
+      flex-shrink: 0;
+    }
+
+    .rename-row .rn-index {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      min-width: 1.8rem;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .rename-row .rn-original {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      min-width: 0;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-family: monospace;
+    }
+
+    .rename-row .rn-arrow {
+      color: var(--text-muted);
+      flex-shrink: 0;
+      font-size: 0.85rem;
+    }
+
+    .rename-row .rn-input {
+      flex: 1.5;
+      min-width: 0;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.3rem 0.5rem;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      font-family: inherit;
+    }
+
+    .rename-row .rn-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .rename-row .rn-ext {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      font-family: monospace;
     }
 
     /* Process button */
@@ -406,26 +653,15 @@
       text-align: center;
     }
 
-    /* Hidden state */
     .hidden {
       display: none !important;
     }
 
-    /* Summary bar */
-    .summary-bar {
-      display: flex;
-      gap: 1.5rem;
-      margin-bottom: 1.25rem;
-      flex-wrap: wrap;
-    }
-
-    .summary-stat {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-    }
-
-    .summary-stat strong {
-      color: var(--text-primary);
+    /* Responsive */
+    @media (max-width: 640px) {
+      .rename-row .rn-original {
+        display: none;
+      }
     }
   </style>
 </head>
@@ -457,100 +693,149 @@
       <input type="file" id="fileInput" multiple accept="image/*">
     </div>
 
-    <!-- Main panels (hidden until images are added) -->
-    <div class="panels hidden" id="mainPanels">
+    <!-- Main content (hidden until images are added) -->
+    <div class="hidden" id="mainContent">
 
-      <!-- Left: Image list -->
-      <div class="panel">
-        <div class="list-header">
-          <h2>Images <span id="imageCountLabel">(0)</span></h2>
-          <button class="clear-all" id="clearAllBtn">Clear all</button>
+      <!-- Top row: image list + output settings -->
+      <div class="panels">
+
+        <!-- Left: Image list -->
+        <div class="panel">
+          <div class="list-header">
+            <h2>Images <span id="imageCountLabel">(0)</span></h2>
+            <button class="clear-all" id="clearAllBtn">Clear all</button>
+          </div>
+
+          <div class="summary-bar" id="summaryBar">
+            <span class="summary-stat">Widths: <strong id="statWidths">-</strong></span>
+            <span class="summary-stat">Heights: <strong id="statHeights">-</strong></span>
+            <span class="summary-stat">Formats: <strong id="statFormats">-</strong></span>
+          </div>
+
+          <div class="image-list" id="imageList"></div>
         </div>
 
-        <div class="summary-bar" id="summaryBar">
-          <span class="summary-stat">Widths: <strong id="statWidths">-</strong></span>
-          <span class="summary-stat">Heights: <strong id="statHeights">-</strong></span>
-          <span class="summary-stat">Formats: <strong id="statFormats">-</strong></span>
-        </div>
+        <!-- Right: Settings -->
+        <div class="panel">
+          <h2>Output Settings</h2>
 
-        <div class="image-list" id="imageList"></div>
+          <div class="mode-toggle">
+            <div class="mode-option active" data-mode="full" id="modeFullBtn">
+              <span class="mode-option-label">Full Process</span>
+              Resize, convert &amp; rename
+            </div>
+            <div class="mode-option" data-mode="rename" id="modeRenameBtn">
+              <span class="mode-option-label">Rename Only</span>
+              Keep original files
+            </div>
+          </div>
+
+          <div id="resizeFormatControls">
+          <div class="control-group">
+            <label>Target Size (px)</label>
+            <div class="size-inputs">
+              <input type="number" id="targetWidth" min="1" max="8192" placeholder="Width">
+              <span class="x-label">&times;</span>
+              <input type="number" id="targetHeight" min="1" max="8192" placeholder="Height">
+            </div>
+            <div class="detected-size" id="detectedSize"></div>
+          </div>
+
+          <div class="control-group">
+            <label>Fit Mode</label>
+            <div class="fit-options">
+              <div class="fit-option active" data-mode="cover">
+                <span class="fit-option-label">Cover</span>
+                Fill &amp; crop
+              </div>
+              <div class="fit-option" data-mode="contain">
+                <span class="fit-option-label">Contain</span>
+                Fit &amp; pad
+              </div>
+            </div>
+            <div class="bg-color-row hidden" id="bgColorRow">
+              <input type="color" id="bgColor" value="#000000">
+              <span>Background fill color</span>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label>Export Format</label>
+            <select id="exportFormat">
+              <option value="image/png">PNG</option>
+              <option value="image/jpeg">JPG</option>
+              <option value="image/webp">WEBP</option>
+            </select>
+          </div>
+
+          <div class="control-group" id="qualityGroup">
+            <label>Quality</label>
+            <div class="quality-row">
+              <input type="range" id="qualitySlider" min="10" max="100" value="92">
+              <span class="quality-val" id="qualityVal">92%</span>
+            </div>
+          </div>
+          </div><!-- /resizeFormatControls -->
+        </div>
       </div>
 
-      <!-- Right: Settings -->
-      <div class="panel">
-        <h2>Output Settings</h2>
+      <!-- Full-width rename panel -->
+      <div class="panel rename-panel">
+        <h2>
+          Rename
+          <span style="font-size:0.78rem; font-weight:400; color:var(--text-muted)">Edit export names individually or use the tools below</span>
+        </h2>
 
-        <!-- Target size -->
-        <div class="control-group">
-          <label>Target Size (px)</label>
-          <div class="size-inputs">
-            <input type="number" id="targetWidth" min="1" max="8192" placeholder="Width">
-            <span class="x-label">&times;</span>
-            <input type="number" id="targetHeight" min="1" max="8192" placeholder="Height">
+        <!-- Toolbar -->
+        <div class="rename-toolbar">
+          <div class="toolbar-group">
+            <button class="toolbar-btn accent" id="btnSmartSimplify" title="Auto-strip common prefix, trailing numbers, and extract the subject name">Smart Simplify</button>
           </div>
-          <div class="detected-size" id="detectedSize"></div>
-        </div>
 
-        <!-- Fit mode -->
-        <div class="control-group">
-          <label>Fit Mode</label>
-          <div class="fit-options">
-            <div class="fit-option active" data-mode="cover">
-              <span class="fit-option-label">Cover</span>
-              Fill &amp; crop
-            </div>
-            <div class="fit-option" data-mode="contain">
-              <span class="fit-option-label">Contain</span>
-              Fit &amp; pad
-            </div>
+          <div class="toolbar-separator"></div>
+
+          <div class="toolbar-group">
+            <button class="toolbar-btn" id="btnStripPrefix" title="Remove the shared prefix from all names">Strip Prefix</button>
+            <button class="toolbar-btn" id="btnStripSuffix" title="Remove the shared suffix from all names">Strip Suffix</button>
+            <button class="toolbar-btn" id="btnStripTrailingNums" title="Remove trailing _number patterns">Strip Trailing #</button>
           </div>
-          <div class="bg-color-row hidden" id="bgColorRow">
-            <input type="color" id="bgColor" value="#000000">
-            <span>Background fill color</span>
+
+          <div class="toolbar-separator"></div>
+
+          <div class="toolbar-group">
+            <input type="text" class="toolbar-input" id="findInput" placeholder="Find...">
+            <input type="text" class="toolbar-input" id="replaceInput" placeholder="Replace with...">
+            <button class="toolbar-btn" id="btnFindReplace">Replace</button>
           </div>
-        </div>
 
-        <!-- Export format -->
-        <div class="control-group">
-          <label>Export Format</label>
-          <select id="exportFormat">
-            <option value="image/png">PNG</option>
-            <option value="image/jpeg">JPG</option>
-            <option value="image/webp">WEBP</option>
-          </select>
-        </div>
+          <div class="toolbar-separator"></div>
 
-        <!-- Quality (for JPG/WEBP) -->
-        <div class="control-group" id="qualityGroup">
-          <label>Quality</label>
-          <div class="quality-row">
-            <input type="range" id="qualitySlider" min="10" max="100" value="92">
-            <span class="quality-val" id="qualityVal">92%</span>
+          <div class="toolbar-group">
+            <input type="text" class="toolbar-input" id="patternInput" placeholder="Pattern prefix..." style="width:100px">
+            <button class="toolbar-btn" id="btnApplyPattern" title="Set all names to prefix_001, prefix_002, ...">Apply Pattern</button>
+          </div>
+
+          <div class="toolbar-separator"></div>
+
+          <div class="toolbar-group">
+            <button class="toolbar-btn" id="btnResetNames" title="Reset all names back to originals">Reset</button>
           </div>
         </div>
 
-        <!-- Rename pattern -->
-        <div class="control-group">
-          <label>Rename Pattern</label>
-          <input type="text" id="renamePattern" placeholder="e.g. sprite" value="">
-          <div class="rename-preview" id="renamePreview">Leave empty to keep original names</div>
-        </div>
+        <div class="detected-prefix" id="detectedPrefixInfo"></div>
 
-        <!-- Start index -->
-        <div class="control-group">
-          <label>Start Number</label>
-          <input type="number" id="startIndex" min="0" value="1">
-        </div>
+        <!-- Rename table -->
+        <div class="rename-table" id="renameTable"></div>
+      </div>
 
-        <!-- Process button -->
-        <button class="process-btn" id="processBtn" disabled>Process &amp; Download ZIP</button>
+      <!-- Process button -->
+      <button class="process-btn" id="processBtn" disabled style="margin-top:1.5rem">Process &amp; Download ZIP</button>
 
-        <div class="progress-bar-container" id="progressContainer">
-          <div class="progress-bar-outer">
-            <div class="progress-bar-inner" id="progressBar"></div>
-          </div>
-          <div class="progress-text" id="progressText">0 / 0</div>
+      <div class="progress-bar-container" id="progressContainer">
+        <div class="progress-bar-outer">
+          <div class="progress-bar-inner" id="progressBar"></div>
         </div>
+        <div class="progress-text" id="progressText">0 / 0</div>
       </div>
     </div>
   </main>
@@ -566,13 +851,14 @@
       const MAX_IMAGES = 200;
 
       // State
-      let images = []; // { file, name, width, height, objectUrl }
+      let images = [];      // { file, name, width, height, objectUrl, exportName }
       let fitMode = "cover";
+      let renameOnlyMode = false;
 
       // DOM refs
       const dropZone = document.getElementById("dropZone");
       const fileInput = document.getElementById("fileInput");
-      const mainPanels = document.getElementById("mainPanels");
+      const mainContent = document.getElementById("mainContent");
       const imageList = document.getElementById("imageList");
       const imageCountLabel = document.getElementById("imageCountLabel");
       const clearAllBtn = document.getElementById("clearAllBtn");
@@ -583,9 +869,6 @@
       const qualityGroup = document.getElementById("qualityGroup");
       const qualitySlider = document.getElementById("qualitySlider");
       const qualityVal = document.getElementById("qualityVal");
-      const renamePattern = document.getElementById("renamePattern");
-      const startIndex = document.getElementById("startIndex");
-      const renamePreview = document.getElementById("renamePreview");
       const processBtn = document.getElementById("processBtn");
       const progressContainer = document.getElementById("progressContainer");
       const progressBar = document.getElementById("progressBar");
@@ -596,6 +879,40 @@
       const statHeights = document.getElementById("statHeights");
       const statFormats = document.getElementById("statFormats");
       const fitOptions = document.querySelectorAll(".fit-option");
+      const renameTable = document.getElementById("renameTable");
+      const detectedPrefixInfo = document.getElementById("detectedPrefixInfo");
+      const modeFullBtn = document.getElementById("modeFullBtn");
+      const modeRenameBtn = document.getElementById("modeRenameBtn");
+      const resizeFormatControls = document.getElementById("resizeFormatControls");
+
+      // Rename toolbar
+      const btnSmartSimplify = document.getElementById("btnSmartSimplify");
+      const btnStripPrefix = document.getElementById("btnStripPrefix");
+      const btnStripSuffix = document.getElementById("btnStripSuffix");
+      const btnStripTrailingNums = document.getElementById("btnStripTrailingNums");
+      const findInput = document.getElementById("findInput");
+      const replaceInput = document.getElementById("replaceInput");
+      const btnFindReplace = document.getElementById("btnFindReplace");
+      const patternInput = document.getElementById("patternInput");
+      const btnApplyPattern = document.getElementById("btnApplyPattern");
+      const btnResetNames = document.getElementById("btnResetNames");
+
+      // ===== Helpers =====
+
+      function baseName(filename) {
+        return filename.replace(/\.[^.]+$/, "");
+      }
+
+      function formatToExt(mime) {
+        if (mime === "image/png") return ".png";
+        if (mime === "image/jpeg") return ".jpg";
+        if (mime === "image/webp") return ".webp";
+        return ".png";
+      }
+
+      function currentExt() {
+        return formatToExt(exportFormat.value);
+      }
 
       // ===== File Handling =====
 
@@ -633,12 +950,14 @@
           const url = URL.createObjectURL(file);
           const img = new Image();
           img.onload = () => {
+            const base = baseName(file.name);
             resolve({
               file,
               name: file.name,
               width: img.naturalWidth,
               height: img.naturalHeight,
               objectUrl: url,
+              exportName: base,
             });
           };
           img.onerror = () => {
@@ -652,16 +971,17 @@
       // ===== UI Refresh =====
 
       function refresh() {
-        mainPanels.classList.toggle("hidden", images.length === 0);
+        mainContent.classList.toggle("hidden", images.length === 0);
         imageCountLabel.textContent = `(${images.length})`;
         processBtn.disabled = images.length === 0;
-        renderList();
+        renderImageList();
+        renderRenameTable();
         computeStats();
         computeOptimalSize();
-        updateRenamePreview();
+        updateDetectedPrefix();
       }
 
-      function renderList() {
+      function renderImageList() {
         imageList.innerHTML = "";
         images.forEach((img, i) => {
           const el = document.createElement("div");
@@ -683,6 +1003,43 @@
         });
       }
 
+      function originalExt(filename) {
+        const m = filename.match(/\.[^.]+$/);
+        return m ? m[0] : "";
+      }
+
+      function renderRenameTable() {
+        renameTable.innerHTML = "";
+        images.forEach((img, i) => {
+          const ext = renameOnlyMode ? originalExt(img.name) : currentExt();
+          const row = document.createElement("div");
+          row.className = "rename-row";
+          row.innerHTML = `
+            <span class="rn-index">${i + 1}</span>
+            <img class="rn-thumb" src="${img.objectUrl}" alt="">
+            <span class="rn-original" title="${img.name}">${img.name}</span>
+            <span class="rn-arrow">&rarr;</span>
+            <input class="rn-input" type="text" value="${img.exportName}" data-idx="${i}">
+            <span class="rn-ext">${ext}</span>
+          `;
+          const input = row.querySelector(".rn-input");
+          input.addEventListener("input", () => {
+            images[i].exportName = input.value;
+          });
+          renameTable.appendChild(row);
+        });
+      }
+
+      // Update .rn-ext when format changes
+      exportFormat.addEventListener("change", () => {
+        const ext = currentExt();
+        renameTable.querySelectorAll(".rn-ext").forEach((el) => {
+          el.textContent = ext;
+        });
+        qualityGroup.style.display = exportFormat.value === "image/png" ? "none" : "";
+      });
+      qualityGroup.style.display = exportFormat.value === "image/png" ? "none" : "";
+
       function computeStats() {
         if (images.length === 0) return;
         const widths = [...new Set(images.map((i) => i.width))].sort((a, b) => a - b);
@@ -694,10 +1051,10 @@
 
         statWidths.textContent = widths.length <= 3
           ? widths.join(", ") + "px"
-          : `${widths[0]}–${widths[widths.length - 1]}px (${widths.length} unique)`;
+          : `${widths[0]}\u2013${widths[widths.length - 1]}px (${widths.length} unique)`;
         statHeights.textContent = heights.length <= 3
           ? heights.join(", ") + "px"
-          : `${heights[0]}–${heights[heights.length - 1]}px (${heights.length} unique)`;
+          : `${heights[0]}\u2013${heights[heights.length - 1]}px (${heights.length} unique)`;
         statFormats.textContent = formats.join(", ").toUpperCase();
       }
 
@@ -706,7 +1063,6 @@
         const minW = Math.min(...images.map((i) => i.width));
         const minH = Math.min(...images.map((i) => i.height));
 
-        // Only auto-fill if user hasn't manually typed something
         if (!targetWidth.dataset.userSet) targetWidth.value = minW;
         if (!targetHeight.dataset.userSet) targetHeight.value = minH;
 
@@ -719,7 +1075,6 @@
         });
       }
 
-      // Track manual edits to size fields
       targetWidth.addEventListener("input", () => { targetWidth.dataset.userSet = "1"; });
       targetHeight.addEventListener("input", () => { targetHeight.dataset.userSet = "1"; });
 
@@ -734,45 +1089,254 @@
         });
       });
 
-      // ===== Format / Quality =====
-
-      exportFormat.addEventListener("change", () => {
-        const fmt = exportFormat.value;
-        qualityGroup.style.display = fmt === "image/png" ? "none" : "";
-      });
-      // Initial state
-      qualityGroup.style.display = exportFormat.value === "image/png" ? "none" : "";
-
       qualitySlider.addEventListener("input", () => {
         qualityVal.textContent = qualitySlider.value + "%";
       });
 
-      // ===== Rename Preview =====
+      // ===== Mode Toggle =====
 
-      renamePattern.addEventListener("input", updateRenamePreview);
-      startIndex.addEventListener("input", updateRenamePreview);
+      modeFullBtn.addEventListener("click", () => {
+        renameOnlyMode = false;
+        modeFullBtn.classList.add("active");
+        modeRenameBtn.classList.remove("active");
+        resizeFormatControls.classList.remove("settings-dimmed");
+        renderRenameTable();
+      });
 
-      function updateRenamePreview() {
-        const pattern = renamePattern.value.trim();
-        const start = parseInt(startIndex.value, 10) || 0;
-        const ext = formatToExt(exportFormat.value);
-        if (!pattern) {
-          renamePreview.textContent = "Leave empty to keep original names";
-          return;
+      modeRenameBtn.addEventListener("click", () => {
+        renameOnlyMode = true;
+        modeRenameBtn.classList.add("active");
+        modeFullBtn.classList.remove("active");
+        resizeFormatControls.classList.add("settings-dimmed");
+        renderRenameTable();
+      });
+
+      // ===== Rename Logic =====
+
+      // Longest common prefix of an array of strings (word-boundary aware using separator)
+      function longestCommonPrefix(strings, sep) {
+        if (strings.length === 0) return "";
+        let prefix = strings[0];
+        for (let i = 1; i < strings.length; i++) {
+          while (strings[i].indexOf(prefix) !== 0) {
+            prefix = prefix.substring(0, prefix.length - 1);
+            if (prefix === "") return "";
+          }
         }
-        const pad = String(start + Math.max(images.length - 1, 0)).length;
-        const ex1 = pattern + "_" + String(start).padStart(pad, "0") + ext;
-        const ex2 = pattern + "_" + String(start + 1).padStart(pad, "0") + ext;
-        renamePreview.textContent = `e.g. ${ex1}, ${ex2}, ...`;
+        // Snap to the last separator boundary so we don't cut mid-word
+        if (sep) {
+          const lastSep = prefix.lastIndexOf(sep);
+          if (lastSep > 0 && lastSep < prefix.length - 1) {
+            prefix = prefix.substring(0, lastSep + 1);
+          }
+        }
+        return prefix;
       }
 
-      exportFormat.addEventListener("change", updateRenamePreview);
+      // Longest common suffix (word-boundary aware)
+      function longestCommonSuffix(strings, sep) {
+        const reversed = strings.map((s) => s.split("").reverse().join(""));
+        const revPrefix = longestCommonPrefix(reversed, sep);
+        const suffix = revPrefix.split("").reverse().join("");
+        if (sep) {
+          const firstSep = suffix.indexOf(sep);
+          if (firstSep > 0 && firstSep < suffix.length - 1) {
+            return suffix.substring(firstSep);
+          }
+        }
+        return suffix;
+      }
 
-      function formatToExt(mime) {
-        if (mime === "image/png") return ".png";
-        if (mime === "image/jpeg") return ".jpg";
-        if (mime === "image/webp") return ".webp";
-        return ".png";
+      function getExportNames() {
+        return images.map((img) => img.exportName);
+      }
+
+      function setExportNames(names) {
+        names.forEach((n, i) => {
+          if (i < images.length) images[i].exportName = n;
+        });
+        syncRenameInputs();
+      }
+
+      function syncRenameInputs() {
+        const inputs = renameTable.querySelectorAll(".rn-input");
+        inputs.forEach((input, i) => {
+          if (i < images.length) input.value = images[i].exportName;
+        });
+      }
+
+      function updateDetectedPrefix() {
+        if (images.length < 2) {
+          detectedPrefixInfo.innerHTML = "";
+          return;
+        }
+        const names = getExportNames();
+        const prefix = longestCommonPrefix(names, "_");
+        if (prefix.length > 0) {
+          detectedPrefixInfo.innerHTML = `Detected shared prefix: <code>${prefix}</code>`;
+        } else {
+          detectedPrefixInfo.innerHTML = "";
+        }
+      }
+
+      // --- Strip Common Prefix ---
+      btnStripPrefix.addEventListener("click", () => {
+        const names = getExportNames();
+        if (names.length < 2) return;
+        const prefix = longestCommonPrefix(names, "_");
+        if (!prefix) return;
+        setExportNames(names.map((n) => n.startsWith(prefix) ? n.slice(prefix.length) || n : n));
+        updateDetectedPrefix();
+      });
+
+      // --- Strip Common Suffix ---
+      btnStripSuffix.addEventListener("click", () => {
+        const names = getExportNames();
+        if (names.length < 2) return;
+        const suffix = longestCommonSuffix(names, "_");
+        if (!suffix) return;
+        setExportNames(names.map((n) => n.endsWith(suffix) ? n.slice(0, -suffix.length) || n : n));
+        updateDetectedPrefix();
+      });
+
+      // --- Strip Trailing Numbers ---
+      btnStripTrailingNums.addEventListener("click", () => {
+        const names = getExportNames();
+        setExportNames(names.map((n) => n.replace(/[_\-\s]*\d+$/, "") || n));
+        updateDetectedPrefix();
+      });
+
+      // --- Find & Replace ---
+      btnFindReplace.addEventListener("click", () => {
+        const find = findInput.value;
+        if (!find) return;
+        const replace = replaceInput.value;
+        const names = getExportNames();
+        setExportNames(names.map((n) => n.split(find).join(replace)));
+        updateDetectedPrefix();
+      });
+
+      // --- Apply Pattern ---
+      btnApplyPattern.addEventListener("click", () => {
+        const prefix = patternInput.value.trim();
+        if (!prefix) return;
+        const pad = String(images.length).length;
+        setExportNames(images.map((_, i) => prefix + "_" + String(i + 1).padStart(pad, "0")));
+        updateDetectedPrefix();
+      });
+
+      // --- Reset Names ---
+      btnResetNames.addEventListener("click", () => {
+        images.forEach((img) => {
+          img.exportName = baseName(img.name);
+        });
+        syncRenameInputs();
+        updateDetectedPrefix();
+      });
+
+      // --- Smart Simplify ---
+      btnSmartSimplify.addEventListener("click", () => {
+        if (images.length === 0) return;
+
+        // Step 1: Start from original base names
+        let names = images.map((img) => baseName(img.name));
+
+        // Step 2: Strip common prefix (at word boundary)
+        if (names.length >= 2) {
+          const prefix = longestCommonPrefix(names, "_");
+          if (prefix) {
+            names = names.map((n) => n.startsWith(prefix) ? n.slice(prefix.length) || n : n);
+          }
+        }
+
+        // Step 3: Strip trailing number pattern
+        names = names.map((n) => n.replace(/[_\-\s]*\d+$/, "") || n);
+
+        // Step 4: Extract the subject/title from the remaining text
+        // Heuristic: walk underscore-separated tokens from the start.
+        // Keep tokens while they start with an uppercase letter (title words).
+        // Stop when we hit a fully-lowercase token (likely a descriptor).
+        names = names.map((n) => extractTitle(n));
+
+        setExportNames(names);
+        updateDetectedPrefix();
+      });
+
+      function extractTitle(name) {
+        const tokens = name.split("_");
+        const titleTokens = [];
+
+        for (const token of tokens) {
+          if (!token) continue;
+          // If starts with uppercase -> likely a title word
+          if (token[0] === token[0].toUpperCase() && token[0] !== token[0].toLowerCase()) {
+            titleTokens.push(token);
+          } else {
+            // Lowercase token -> we've passed the title
+            break;
+          }
+        }
+
+        if (titleTokens.length === 0) {
+          // No uppercase tokens found; fall back to first 2-3 tokens
+          return tokens.slice(0, Math.min(3, tokens.length)).join("_");
+        }
+
+        // Clean the last title token: it might have lowercase chars run-on
+        // e.g., "Accurseda" should become "Accursed"
+        // Heuristic: if the last token ends with a single lowercase letter
+        // that looks like a conjunction/article appended (a, e, i, o, the, an),
+        // trim it. More aggressively: trim trailing lowercase segment if it
+        // makes the token look like it ends cleanly.
+        const lastIdx = titleTokens.length - 1;
+        titleTokens[lastIdx] = cleanTrailingRunon(titleTokens[lastIdx]);
+
+        return titleTokens.join("_");
+      }
+
+      function cleanTrailingRunon(word) {
+        // If word is short, don't trim
+        if (word.length <= 3) return word;
+
+        // Find where the trailing lowercase segment starts after the initial
+        // uppercase portion. E.g., "Accurseda" -> "Accursed" + "a"
+        // Walk backwards while chars are lowercase
+        let cutPoint = word.length;
+        while (cutPoint > 1 && word[cutPoint - 1] === word[cutPoint - 1].toLowerCase() &&
+               word[cutPoint - 1] !== word[cutPoint - 1].toUpperCase()) {
+          cutPoint--;
+        }
+
+        // cutPoint is now at the last uppercase or start.
+        // The "clean" part is everything up to some point after cutPoint.
+        // We want to detect if there's a small trailing lowercase fragment.
+
+        // Actually let's try a different approach:
+        // Common suffixes from AI generators that get appended: a, an, the, in, of, with
+        // Check if the word ends with a common short word run-on
+        const runons = ["athe", "aand", "ain", "awith", "aof", "ais", "afor",
+                        "alarge", "adark", "asmall", "agod", "astone", "aancient",
+                        "aepic", "amyst"];
+        const lower = word.toLowerCase();
+        for (const suffix of runons) {
+          if (lower.endsWith(suffix) && word.length > suffix.length + 2) {
+            return word.slice(0, word.length - suffix.length);
+          }
+        }
+
+        // Simpler: if the word ends with a single 'a','e','i','o' that seems
+        // tacked on (the char before it is a consonant and lowercase),
+        // and removing it leaves a word > 4 chars, trim it.
+        const lastChar = word[word.length - 1].toLowerCase();
+        if ("aeiou".includes(lastChar) && word.length > 5) {
+          const beforeLast = word[word.length - 2].toLowerCase();
+          if (!"aeiou".includes(beforeLast)) {
+            // Looks like a trailing vowel tacked on (e.g., "Accurseda" -> "Accursed")
+            return word.slice(0, -1);
+          }
+        }
+
+        return word;
       }
 
       // ===== Clear All =====
@@ -790,80 +1354,104 @@
       processBtn.addEventListener("click", processImages);
 
       async function processImages() {
-        const w = parseInt(targetWidth.value, 10);
-        const h = parseInt(targetHeight.value, 10);
-        if (!w || !h || w < 1 || h < 1) {
-          alert("Please enter a valid target width and height.");
-          return;
+        if (!renameOnlyMode) {
+          const w = parseInt(targetWidth.value, 10);
+          const h = parseInt(targetHeight.value, 10);
+          if (!w || !h || w < 1 || h < 1) {
+            alert("Please enter a valid target width and height.");
+            return;
+          }
         }
-
-        const fmt = exportFormat.value;
-        const quality = fmt === "image/png" ? undefined : parseInt(qualitySlider.value, 10) / 100;
-        const ext = formatToExt(fmt);
-        const pattern = renamePattern.value.trim();
-        const start = parseInt(startIndex.value, 10) || 0;
-        const pad = String(start + images.length - 1).length;
-        const bg = bgColor.value;
 
         processBtn.disabled = true;
         progressContainer.classList.add("visible");
 
         const zip = new JSZip();
-        const canvas = document.createElement("canvas");
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext("2d");
+        const usedNames = new Set();
 
-        for (let i = 0; i < images.length; i++) {
-          progressBar.style.width = ((i / images.length) * 100) + "%";
-          progressText.textContent = `${i} / ${images.length}`;
+        if (renameOnlyMode) {
+          // Rename only: zip original files with new names
+          for (let i = 0; i < images.length; i++) {
+            progressBar.style.width = ((i / images.length) * 100) + "%";
+            progressText.textContent = `${i} / ${images.length}`;
 
-          const img = await createImageBitmap(images[i].file);
+            const ext = originalExt(images[i].name);
+            let filename = (images[i].exportName || "image_" + (i + 1)) + ext;
 
-          // Clear canvas
-          ctx.clearRect(0, 0, w, h);
+            let base = filename;
+            let counter = 2;
+            while (usedNames.has(filename.toLowerCase())) {
+              const dot = base.lastIndexOf(".");
+              filename = base.slice(0, dot) + "_" + counter + base.slice(dot);
+              counter++;
+            }
+            usedNames.add(filename.toLowerCase());
 
-          if (fitMode === "contain") {
-            ctx.fillStyle = bg;
-            ctx.fillRect(0, 0, w, h);
-            const scale = Math.min(w / img.width, h / img.height);
-            const sw = img.width * scale;
-            const sh = img.height * scale;
-            ctx.drawImage(img, (w - sw) / 2, (h - sh) / 2, sw, sh);
-          } else {
-            // cover: fill target, crop overflow
-            const scale = Math.max(w / img.width, h / img.height);
-            const sw = img.width * scale;
-            const sh = img.height * scale;
-            ctx.drawImage(img, (w - sw) / 2, (h - sh) / 2, sw, sh);
+            zip.file(filename, images[i].file);
           }
+        } else {
+          // Full process: resize, convert, rename
+          const w = parseInt(targetWidth.value, 10);
+          const h = parseInt(targetHeight.value, 10);
+          const fmt = exportFormat.value;
+          const quality = fmt === "image/png" ? undefined : parseInt(qualitySlider.value, 10) / 100;
+          const ext = currentExt();
+          const bg = bgColor.value;
 
-          img.close();
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
 
-          // Export canvas to blob
-          const blob = await new Promise((resolve) => canvas.toBlob(resolve, fmt, quality));
+          for (let i = 0; i < images.length; i++) {
+            progressBar.style.width = ((i / images.length) * 100) + "%";
+            progressText.textContent = `${i} / ${images.length}`;
 
-          // Filename
-          let filename;
-          if (pattern) {
-            filename = pattern + "_" + String(start + i).padStart(pad, "0") + ext;
-          } else {
-            const origBase = images[i].name.replace(/\.[^.]+$/, "");
-            filename = origBase + ext;
+            const img = await createImageBitmap(images[i].file);
+
+            ctx.clearRect(0, 0, w, h);
+
+            if (fitMode === "contain") {
+              ctx.fillStyle = bg;
+              ctx.fillRect(0, 0, w, h);
+              const scale = Math.min(w / img.width, h / img.height);
+              const sw = img.width * scale;
+              const sh = img.height * scale;
+              ctx.drawImage(img, (w - sw) / 2, (h - sh) / 2, sw, sh);
+            } else {
+              const scale = Math.max(w / img.width, h / img.height);
+              const sw = img.width * scale;
+              const sh = img.height * scale;
+              ctx.drawImage(img, (w - sw) / 2, (h - sh) / 2, sw, sh);
+            }
+
+            img.close();
+
+            const blob = await new Promise((resolve) => canvas.toBlob(resolve, fmt, quality));
+
+            let filename = (images[i].exportName || "image_" + (i + 1)) + ext;
+
+            let base = filename;
+            let counter = 2;
+            while (usedNames.has(filename.toLowerCase())) {
+              const dot = base.lastIndexOf(".");
+              filename = base.slice(0, dot) + "_" + counter + base.slice(dot);
+              counter++;
+            }
+            usedNames.add(filename.toLowerCase());
+
+            zip.file(filename, blob);
           }
-
-          zip.file(filename, blob);
         }
 
         progressBar.style.width = "100%";
-        progressText.textContent = `${images.length} / ${images.length} — zipping...`;
+        progressText.textContent = `${images.length} / ${images.length} \u2014 zipping...`;
 
         const zipBlob = await zip.generateAsync({ type: "blob" });
 
-        // Trigger download
         const a = document.createElement("a");
         a.href = URL.createObjectURL(zipBlob);
-        a.download = (pattern || "images") + "_batch.zip";
+        a.download = "images_batch.zip";
         document.body.appendChild(a);
         a.click();
         a.remove();
