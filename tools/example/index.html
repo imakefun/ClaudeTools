@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Example Tool - ClaudeTools</title>
+  <meta name="description" content="An example tool page showing the template structure for ClaudeTools.">
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../" class="site-logo">
+        <span class="logo-icon">&#9881;</span>
+        ClaudeTools
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="../../#tools">Tools</a></li>
+          <li><a href="https://github.com/imakefun/ClaudeTools">GitHub</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="tool-page">
+    <div class="breadcrumb">
+      <a href="../../">ClaudeTools</a>
+      <span class="separator">/</span>
+      <span>Example Tool</span>
+    </div>
+
+    <div class="tool-detail-header">
+      <h1>Example Tool</h1>
+      <p class="subtitle">A template showing how each tool page is structured.</p>
+    </div>
+
+    <div class="tool-detail-content">
+      <h2>Overview</h2>
+      <p>
+        This is an example tool page. Each tool in ClaudeTools gets its own page
+        like this one, with sections explaining what it does, how to use it, and
+        any relevant details.
+      </p>
+
+      <h2>How to Use</h2>
+      <ol>
+        <li>Create a new folder under <code>tools/</code> with the tool name.</li>
+        <li>Copy this page as a starting point and update the content.</li>
+        <li>Add a card linking to the new tool on the main hub page.</li>
+      </ol>
+
+      <h2>Adding a Tool Card</h2>
+      <p>On the main <code>index.html</code>, add a card inside the <code>.tools-grid</code> div and update the tool count:</p>
+      <pre><code>&lt;a href="tools/your-tool/" class="tool-card"&gt;
+  &lt;div class="tool-card-header"&gt;
+    &lt;div class="tool-icon blue"&gt;&#x1F527;&lt;/div&gt;
+    &lt;h3&gt;Your Tool Name&lt;/h3&gt;
+  &lt;/div&gt;
+  &lt;p&gt;Short description of the tool.&lt;/p&gt;
+  &lt;div class="tool-card-footer"&gt;
+    &lt;span class="tool-tag utility"&gt;category&lt;/span&gt;
+    &lt;span class="tool-link"&gt;View details &amp;rarr;&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/a&gt;</code></pre>
+
+      <h2>Available Categories</h2>
+      <ul>
+        <li><code>utility</code> &mdash; General-purpose utilities</li>
+        <li><code>productivity</code> &mdash; Productivity helpers</li>
+        <li><code>automation</code> &mdash; Automation scripts and workflows</li>
+        <li><code>dev</code> &mdash; Developer-focused tools</li>
+      </ul>
+
+      <h2>Color Options for Icons</h2>
+      <p>The <code>.tool-icon</code> element supports these color classes:</p>
+      <ul>
+        <li><code>blue</code></li>
+        <li><code>green</code></li>
+        <li><code>orange</code></li>
+        <li><code>purple</code></li>
+      </ul>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>ClaudeTools &mdash; built one tool at a time.</p>
+  </footer>
+
+</body>
+</html>
