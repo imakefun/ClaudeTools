@@ -341,6 +341,48 @@
       color: var(--text-secondary);
     }
 
+    /* Mode toggle */
+    .mode-toggle {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .mode-option {
+      flex: 1;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.5rem;
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .mode-option:hover {
+      border-color: var(--text-muted);
+    }
+
+    .mode-option.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-subtle);
+    }
+
+    .mode-option-label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.15rem;
+      font-size: 0.85rem;
+    }
+
+    .settings-dimmed {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
     /* Summary bar */
     .summary-bar {
       display: flex;
@@ -677,6 +719,18 @@
         <div class="panel">
           <h2>Output Settings</h2>
 
+          <div class="mode-toggle">
+            <div class="mode-option active" data-mode="full" id="modeFullBtn">
+              <span class="mode-option-label">Full Process</span>
+              Resize, convert &amp; rename
+            </div>
+            <div class="mode-option" data-mode="rename" id="modeRenameBtn">
+              <span class="mode-option-label">Rename Only</span>
+              Keep original files
+            </div>
+          </div>
+
+          <div id="resizeFormatControls">
           <div class="control-group">
             <label>Target Size (px)</label>
             <div class="size-inputs">
@@ -721,6 +775,7 @@
               <span class="quality-val" id="qualityVal">92%</span>
             </div>
           </div>
+          </div><!-- /resizeFormatControls -->
         </div>
       </div>
 
@@ -798,6 +853,7 @@
       // State
       let images = [];      // { file, name, width, height, objectUrl, exportName }
       let fitMode = "cover";
+      let renameOnlyMode = false;
 
       // DOM refs
       const dropZone = document.getElementById("dropZone");
@@ -825,6 +881,9 @@
       const fitOptions = document.querySelectorAll(".fit-option");
       const renameTable = document.getElementById("renameTable");
       const detectedPrefixInfo = document.getElementById("detectedPrefixInfo");
+      const modeFullBtn = document.getElementById("modeFullBtn");
+      const modeRenameBtn = document.getElementById("modeRenameBtn");
+      const resizeFormatControls = document.getElementById("resizeFormatControls");
 
       // Rename toolbar
       const btnSmartSimplify = document.getElementById("btnSmartSimplify");
@@ -944,10 +1003,15 @@
         });
       }
 
+      function originalExt(filename) {
+        const m = filename.match(/\.[^.]+$/);
+        return m ? m[0] : "";
+      }
+
       function renderRenameTable() {
         renameTable.innerHTML = "";
-        const ext = currentExt();
         images.forEach((img, i) => {
+          const ext = renameOnlyMode ? originalExt(img.name) : currentExt();
           const row = document.createElement("div");
           row.className = "rename-row";
           row.innerHTML = `
@@ -1027,6 +1091,24 @@
 
       qualitySlider.addEventListener("input", () => {
         qualityVal.textContent = qualitySlider.value + "%";
+      });
+
+      // ===== Mode Toggle =====
+
+      modeFullBtn.addEventListener("click", () => {
+        renameOnlyMode = false;
+        modeFullBtn.classList.add("active");
+        modeRenameBtn.classList.remove("active");
+        resizeFormatControls.classList.remove("settings-dimmed");
+        renderRenameTable();
+      });
+
+      modeRenameBtn.addEventListener("click", () => {
+        renameOnlyMode = true;
+        modeRenameBtn.classList.add("active");
+        modeFullBtn.classList.remove("active");
+        resizeFormatControls.classList.add("settings-dimmed");
+        renderRenameTable();
       });
 
       // ===== Rename Logic =====
@@ -1272,70 +1354,94 @@
       processBtn.addEventListener("click", processImages);
 
       async function processImages() {
-        const w = parseInt(targetWidth.value, 10);
-        const h = parseInt(targetHeight.value, 10);
-        if (!w || !h || w < 1 || h < 1) {
-          alert("Please enter a valid target width and height.");
-          return;
+        if (!renameOnlyMode) {
+          const w = parseInt(targetWidth.value, 10);
+          const h = parseInt(targetHeight.value, 10);
+          if (!w || !h || w < 1 || h < 1) {
+            alert("Please enter a valid target width and height.");
+            return;
+          }
         }
-
-        const fmt = exportFormat.value;
-        const quality = fmt === "image/png" ? undefined : parseInt(qualitySlider.value, 10) / 100;
-        const ext = currentExt();
-        const bg = bgColor.value;
 
         processBtn.disabled = true;
         progressContainer.classList.add("visible");
 
         const zip = new JSZip();
-        const canvas = document.createElement("canvas");
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext("2d");
-
-        // Deduplicate filenames
         const usedNames = new Set();
 
-        for (let i = 0; i < images.length; i++) {
-          progressBar.style.width = ((i / images.length) * 100) + "%";
-          progressText.textContent = `${i} / ${images.length}`;
+        if (renameOnlyMode) {
+          // Rename only: zip original files with new names
+          for (let i = 0; i < images.length; i++) {
+            progressBar.style.width = ((i / images.length) * 100) + "%";
+            progressText.textContent = `${i} / ${images.length}`;
 
-          const img = await createImageBitmap(images[i].file);
+            const ext = originalExt(images[i].name);
+            let filename = (images[i].exportName || "image_" + (i + 1)) + ext;
 
-          ctx.clearRect(0, 0, w, h);
+            let base = filename;
+            let counter = 2;
+            while (usedNames.has(filename.toLowerCase())) {
+              const dot = base.lastIndexOf(".");
+              filename = base.slice(0, dot) + "_" + counter + base.slice(dot);
+              counter++;
+            }
+            usedNames.add(filename.toLowerCase());
 
-          if (fitMode === "contain") {
-            ctx.fillStyle = bg;
-            ctx.fillRect(0, 0, w, h);
-            const scale = Math.min(w / img.width, h / img.height);
-            const sw = img.width * scale;
-            const sh = img.height * scale;
-            ctx.drawImage(img, (w - sw) / 2, (h - sh) / 2, sw, sh);
-          } else {
-            const scale = Math.max(w / img.width, h / img.height);
-            const sw = img.width * scale;
-            const sh = img.height * scale;
-            ctx.drawImage(img, (w - sw) / 2, (h - sh) / 2, sw, sh);
+            zip.file(filename, images[i].file);
           }
+        } else {
+          // Full process: resize, convert, rename
+          const w = parseInt(targetWidth.value, 10);
+          const h = parseInt(targetHeight.value, 10);
+          const fmt = exportFormat.value;
+          const quality = fmt === "image/png" ? undefined : parseInt(qualitySlider.value, 10) / 100;
+          const ext = currentExt();
+          const bg = bgColor.value;
 
-          img.close();
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
 
-          const blob = await new Promise((resolve) => canvas.toBlob(resolve, fmt, quality));
+          for (let i = 0; i < images.length; i++) {
+            progressBar.style.width = ((i / images.length) * 100) + "%";
+            progressText.textContent = `${i} / ${images.length}`;
 
-          // Build filename from the editable exportName
-          let filename = (images[i].exportName || "image_" + (i + 1)) + ext;
+            const img = await createImageBitmap(images[i].file);
 
-          // Ensure unique
-          let base = filename;
-          let counter = 2;
-          while (usedNames.has(filename.toLowerCase())) {
-            const dot = base.lastIndexOf(".");
-            filename = base.slice(0, dot) + "_" + counter + base.slice(dot);
-            counter++;
+            ctx.clearRect(0, 0, w, h);
+
+            if (fitMode === "contain") {
+              ctx.fillStyle = bg;
+              ctx.fillRect(0, 0, w, h);
+              const scale = Math.min(w / img.width, h / img.height);
+              const sw = img.width * scale;
+              const sh = img.height * scale;
+              ctx.drawImage(img, (w - sw) / 2, (h - sh) / 2, sw, sh);
+            } else {
+              const scale = Math.max(w / img.width, h / img.height);
+              const sw = img.width * scale;
+              const sh = img.height * scale;
+              ctx.drawImage(img, (w - sw) / 2, (h - sh) / 2, sw, sh);
+            }
+
+            img.close();
+
+            const blob = await new Promise((resolve) => canvas.toBlob(resolve, fmt, quality));
+
+            let filename = (images[i].exportName || "image_" + (i + 1)) + ext;
+
+            let base = filename;
+            let counter = 2;
+            while (usedNames.has(filename.toLowerCase())) {
+              const dot = base.lastIndexOf(".");
+              filename = base.slice(0, dot) + "_" + counter + base.slice(dot);
+              counter++;
+            }
+            usedNames.add(filename.toLowerCase());
+
+            zip.file(filename, blob);
           }
-          usedNames.add(filename.toLowerCase());
-
-          zip.file(filename, blob);
         }
 
         progressBar.style.width = "100%";
