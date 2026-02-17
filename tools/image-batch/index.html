@@ -663,6 +663,49 @@
         display: none;
       }
     }
+
+    /* Export list bar */
+    .export-list-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .export-list-bar .bar-label {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      margin-right: 0.25rem;
+    }
+
+    .ext-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .ext-toggle input[type="checkbox"] {
+      accent-color: var(--accent);
+    }
+
+    .copy-toast {
+      font-size: 0.78rem;
+      color: var(--green);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .copy-toast.visible {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -833,6 +876,18 @@
 
         <!-- Rename table -->
         <div class="rename-table" id="renameTable"></div>
+
+        <!-- Export file list -->
+        <div class="export-list-bar">
+          <span class="bar-label">File list:</span>
+          <label class="ext-toggle">
+            <input type="checkbox" id="includeExtToggle" checked>
+            Include extension
+          </label>
+          <button class="toolbar-btn" id="btnCopyList" title="Copy file list to clipboard">Copy to Clipboard</button>
+          <button class="toolbar-btn" id="btnDownloadList" title="Download as .txt file">Download .txt</button>
+          <span class="copy-toast" id="copyToast">Copied!</span>
+        </div>
       </div>
 
       <!-- Process button -->
@@ -905,6 +960,10 @@
       const patternInput = document.getElementById("patternInput");
       const btnApplyPattern = document.getElementById("btnApplyPattern");
       const btnResetNames = document.getElementById("btnResetNames");
+      const includeExtToggle = document.getElementById("includeExtToggle");
+      const btnCopyList = document.getElementById("btnCopyList");
+      const btnDownloadList = document.getElementById("btnDownloadList");
+      const copyToast = document.getElementById("copyToast");
 
       // ===== Helpers =====
 
@@ -1359,6 +1418,40 @@
 
         return word;
       }
+
+      // ===== Export File List =====
+
+      function buildFileList() {
+        const withExt = includeExtToggle.checked;
+        return images.map((img, i) => {
+          const name = img.exportName || "image_" + (i + 1);
+          if (!withExt) return name;
+          const ext = renameOnlyMode ? originalExt(img.name) : currentExt();
+          return name + ext;
+        }).join("\n");
+      }
+
+      btnCopyList.addEventListener("click", () => {
+        const text = buildFileList();
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(() => {
+          copyToast.classList.add("visible");
+          setTimeout(() => copyToast.classList.remove("visible"), 1500);
+        });
+      });
+
+      btnDownloadList.addEventListener("click", () => {
+        const text = buildFileList();
+        if (!text) return;
+        const blob = new Blob([text], { type: "text/plain" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "file_list.txt";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(a.href);
+      });
 
       // ===== Clear All =====
 
