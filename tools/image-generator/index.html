@@ -38,18 +38,51 @@
       font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
     }
     .settings-row .field input,
-    .settings-row .field select {
+    .settings-row .field select,
+    .settings-row .field textarea {
       background: var(--bg-primary); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 0.45rem 0.65rem;
       color: var(--text-primary); font-size: 0.88rem; font-family: inherit;
     }
     .settings-row .field input:focus,
-    .settings-row .field select:focus { outline: none; border-color: var(--accent); }
+    .settings-row .field select:focus,
+    .settings-row .field textarea:focus { outline: none; border-color: var(--accent); }
     .api-key-input { width: 320px; }
     .key-hint {
       font-size: 0.75rem; color: var(--text-muted); margin-top: 0.6rem;
     }
     .key-hint a { color: var(--accent); }
+
+    /* Defaults panel */
+    .defaults-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+    }
+    .defaults-grid .field-full { grid-column: 1 / -1; }
+    .defaults-grid .field { display: flex; flex-direction: column; gap: 0.3rem; }
+    .defaults-grid .field label {
+      font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
+    }
+    .defaults-grid .field input,
+    .defaults-grid .field select,
+    .defaults-grid .field textarea {
+      background: var(--bg-primary); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0.45rem 0.65rem;
+      color: var(--text-primary); font-size: 0.88rem; font-family: inherit;
+    }
+    .defaults-grid .field input:focus,
+    .defaults-grid .field select:focus,
+    .defaults-grid .field textarea:focus { outline: none; border-color: var(--accent); }
+    .defaults-grid .field textarea { resize: vertical; min-height: 60px; }
+    .base-prompt-hint {
+      font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;
+    }
+    .defaults-actions {
+      display: flex; gap: 0.5rem; margin-top: 1rem; padding-top: 0.75rem;
+      border-top: 1px solid var(--border);
+    }
+    @media (max-width: 640px) {
+      .defaults-grid { grid-template-columns: 1fr; }
+    }
 
     /* Prompt table */
     .prompt-table-wrap {
@@ -253,6 +286,44 @@
       <p class="key-hint">Your key is stored in your browser only and sent directly to Google's API. Get one at <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>.</p>
     </div>
 
+    <!-- Defaults -->
+    <div class="panel">
+      <h2>Defaults &amp; Base Prompt</h2>
+      <div class="defaults-grid">
+        <div class="field field-full">
+          <label>Base Prompt (prepended to every image)</label>
+          <textarea id="basePromptInput" placeholder="e.g. dark fantasy art style, highly detailed, 4k"></textarea>
+          <div class="base-prompt-hint">This text is added before each row's prompt at generation time. Leave empty to skip.</div>
+        </div>
+        <div class="field">
+          <label>Default Aspect Ratio</label>
+          <select id="defaultAspect">
+            <option value="1:1">1:1 (Square)</option>
+            <option value="4:3">4:3 (Fullscreen)</option>
+            <option value="3:4">3:4 (Portrait)</option>
+            <option value="16:9">16:9 (Widescreen)</option>
+            <option value="9:16">9:16 (Tall)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Default Output Size</label>
+          <input type="text" id="defaultSize" placeholder="e.g. 1024x1024">
+        </div>
+        <div class="field">
+          <label>Default Format</label>
+          <select id="defaultFormat">
+            <option value="png">PNG</option>
+            <option value="jpg">JPG</option>
+            <option value="webp">WEBP</option>
+          </select>
+        </div>
+      </div>
+      <div class="defaults-actions">
+        <button class="toolbar-btn accent" id="btnApplyDefaults" title="Set aspect, size, and format on all existing rows">Apply to All Rows</button>
+        <span style="font-size:0.75rem; color:var(--text-muted); align-self:center;">Pushes the defaults above to every row in the prompt table</span>
+      </div>
+    </div>
+
     <!-- Prompt List -->
     <div class="panel">
       <h2>Prompts</h2>
@@ -356,6 +427,11 @@
       const importTextarea = document.getElementById("importTextarea");
       const btnImportCancel = document.getElementById("btnImportCancel");
       const btnImportConfirm = document.getElementById("btnImportConfirm");
+      const basePromptInput = document.getElementById("basePromptInput");
+      const defaultAspect = document.getElementById("defaultAspect");
+      const defaultSize = document.getElementById("defaultSize");
+      const defaultFormat = document.getElementById("defaultFormat");
+      const btnApplyDefaults = document.getElementById("btnApplyDefaults");
 
       // ===== Persist API key =====
       const savedKey = localStorage.getItem("claudetools_gemini_key");
@@ -364,15 +440,29 @@
         localStorage.setItem("claudetools_gemini_key", apiKeyInput.value.trim());
       });
 
+      // ===== Apply Defaults =====
+
+      btnApplyDefaults.addEventListener("click", () => {
+        const aspect = defaultAspect.value;
+        const size = defaultSize.value;
+        const fmt = defaultFormat.value;
+        for (const row of rows) {
+          row.aspect = aspect;
+          row.outputSize = size;
+          row.format = fmt;
+        }
+        renderTable();
+      });
+
       // ===== Row Management =====
 
-      function createRow(prompt = "", aspect = "1:1", outputSize = "", format = "png") {
+      function createRow(prompt = "", aspect = "", outputSize = "", format = "") {
         const row = {
           id: nextId++,
           prompt,
-          aspect,
-          outputSize,
-          format,
+          aspect: aspect || defaultAspect.value,
+          outputSize: outputSize || defaultSize.value,
+          format: format || defaultFormat.value,
           status: "pending",
           result: null,  // { base64, mimeType }
           error: null,
@@ -481,9 +571,9 @@
         for (const line of lines) {
           const parts = line.split("|").map((p) => p.trim());
           const prompt = parts[0] || "";
-          const aspect = parts[1] && ["1:1","4:3","3:4","16:9","9:16"].includes(parts[1]) ? parts[1] : "1:1";
+          const aspect = parts[1] && ["1:1","4:3","3:4","16:9","9:16"].includes(parts[1]) ? parts[1] : "";
           const outputSize = parts[2] || "";
-          const format = parts[3] && ["png","jpg","webp"].includes(parts[3].toLowerCase()) ? parts[3].toLowerCase() : "png";
+          const format = parts[3] && ["png","jpg","webp"].includes(parts[3].toLowerCase()) ? parts[3].toLowerCase() : "";
           if (prompt) createRow(prompt, aspect, outputSize, format);
         }
         importTextarea.value = "";
@@ -531,7 +621,11 @@
           progressText.textContent = `${completed} / ${total}`;
 
           try {
-            const result = await callGeminiApi(apiKey, model, row.prompt, row.aspect);
+            const basePrompt = basePromptInput.value.trim();
+            const fullPrompt = basePrompt
+              ? basePrompt + ", " + row.prompt
+              : row.prompt;
+            const result = await callGeminiApi(apiKey, model, fullPrompt, row.aspect);
             row.result = result;
             row.status = "done";
           } catch (err) {
