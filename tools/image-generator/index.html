@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bulk Image Generator - ClaudeTools</title>
+  <meta name="description" content="Bulk generate images using Google Gemini (Nano Banana) API.">
+  <link rel="stylesheet" href="../../css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    .app-container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 1.5rem 2rem 4rem;
+      width: 100%;
+    }
+    .app-container h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .app-container .subtitle { color: var(--text-secondary); margin-bottom: 2rem; }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .panel h2 {
+      font-size: 1rem; font-weight: 600; margin-bottom: 1rem;
+      padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);
+    }
+
+    /* Settings row */
+    .settings-row {
+      display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;
+    }
+    .settings-row .field { display: flex; flex-direction: column; gap: 0.3rem; }
+    .settings-row .field label {
+      font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
+    }
+    .settings-row .field input,
+    .settings-row .field select {
+      background: var(--bg-primary); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0.45rem 0.65rem;
+      color: var(--text-primary); font-size: 0.88rem; font-family: inherit;
+    }
+    .settings-row .field input:focus,
+    .settings-row .field select:focus { outline: none; border-color: var(--accent); }
+    .api-key-input { width: 320px; }
+    .key-hint {
+      font-size: 0.75rem; color: var(--text-muted); margin-top: 0.6rem;
+    }
+    .key-hint a { color: var(--accent); }
+
+    /* Prompt table */
+    .prompt-table-wrap {
+      max-height: 520px; overflow-y: auto;
+    }
+    .prompt-table-wrap::-webkit-scrollbar { width: 6px; }
+    .prompt-table-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .prompt-table {
+      width: 100%; border-collapse: collapse;
+    }
+    .prompt-table th {
+      text-align: left; font-size: 0.78rem; font-weight: 600;
+      color: var(--text-muted); padding: 0.4rem 0.5rem;
+      border-bottom: 1px solid var(--border); position: sticky; top: 0;
+      background: var(--bg-card); z-index: 1;
+    }
+    .prompt-table td {
+      padding: 0.35rem 0.5rem; vertical-align: middle;
+      border-bottom: 1px solid var(--border);
+    }
+    .prompt-table tr:last-child td { border-bottom: none; }
+
+    .prompt-table .col-num { width: 2.5rem; text-align: center; color: var(--text-muted); font-size: 0.78rem; }
+    .prompt-table .col-prompt { width: auto; }
+    .prompt-table .col-aspect { width: 90px; }
+    .prompt-table .col-size { width: 100px; }
+    .prompt-table .col-fmt { width: 80px; }
+    .prompt-table .col-status { width: 80px; }
+    .prompt-table .col-actions { width: 36px; }
+
+    .prompt-table textarea {
+      width: 100%; min-height: 36px; max-height: 120px; resize: vertical;
+      background: var(--bg-primary); border: 1px solid var(--border);
+      border-radius: 4px; padding: 0.35rem 0.5rem; color: var(--text-primary);
+      font-size: 0.85rem; font-family: inherit; line-height: 1.4;
+    }
+    .prompt-table textarea:focus { outline: none; border-color: var(--accent); }
+
+    .prompt-table select, .prompt-table input[type="text"] {
+      width: 100%; background: var(--bg-primary); border: 1px solid var(--border);
+      border-radius: 4px; padding: 0.3rem 0.4rem; color: var(--text-primary);
+      font-size: 0.82rem; font-family: inherit;
+    }
+    .prompt-table select:focus, .prompt-table input[type="text"]:focus {
+      outline: none; border-color: var(--accent);
+    }
+
+    .row-remove {
+      background: none; border: none; color: var(--text-muted);
+      cursor: pointer; font-size: 1.1rem; padding: 0.2rem; border-radius: 4px;
+    }
+    .row-remove:hover { color: #f85149; background: rgba(248,81,73,0.1); }
+
+    .status-badge {
+      font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 999px;
+      font-weight: 500; display: inline-block; text-align: center;
+    }
+    .status-badge.pending { background: rgba(139,148,158,0.15); color: var(--text-muted); }
+    .status-badge.generating { background: rgba(88,166,255,0.15); color: var(--accent); }
+    .status-badge.done { background: rgba(63,185,80,0.15); color: var(--green); }
+    .status-badge.error { background: rgba(248,81,73,0.15); color: #f85149; }
+
+    /* Toolbar */
+    .table-toolbar {
+      display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;
+      margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);
+    }
+    .toolbar-btn {
+      background: var(--bg-primary); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0.35rem 0.7rem;
+      color: var(--text-secondary); font-size: 0.8rem; cursor: pointer;
+      white-space: nowrap; transition: border-color 0.2s, color 0.2s;
+    }
+    .toolbar-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .toolbar-btn.accent {
+      background: var(--accent-subtle); border-color: var(--accent); color: var(--accent);
+    }
+    .toolbar-btn.accent:hover { background: var(--accent); color: #fff; }
+    .toolbar-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .toolbar-btn:disabled:hover { border-color: var(--border); color: var(--text-secondary); }
+    .toolbar-separator { width: 1px; height: 24px; background: var(--border); margin: 0 0.25rem; }
+
+    /* Import modal */
+    .import-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      display: flex; align-items: center; justify-content: center; z-index: 200;
+    }
+    .import-modal {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 1.5rem; width: 600px; max-width: 90vw;
+    }
+    .import-modal h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+    .import-modal p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem; }
+    .import-modal textarea {
+      width: 100%; height: 200px; background: var(--bg-primary); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0.75rem; color: var(--text-primary);
+      font-size: 0.85rem; font-family: monospace; resize: vertical;
+    }
+    .import-modal textarea:focus { outline: none; border-color: var(--accent); }
+    .import-modal .modal-actions {
+      display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;
+    }
+
+    /* Results gallery */
+    .results-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+    .result-card {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+    }
+    .result-card img {
+      width: 100%; aspect-ratio: 1; object-fit: cover; display: block;
+      background: var(--bg-primary);
+    }
+    .result-card .result-info {
+      padding: 0.6rem 0.75rem;
+    }
+    .result-card .result-prompt {
+      font-size: 0.78rem; color: var(--text-secondary);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 0.4rem;
+    }
+    .result-card .result-actions {
+      display: flex; gap: 0.35rem;
+    }
+    .result-card .result-actions button {
+      flex: 1; background: var(--bg-primary); border: 1px solid var(--border);
+      border-radius: 4px; padding: 0.25rem; color: var(--text-secondary);
+      font-size: 0.75rem; cursor: pointer;
+    }
+    .result-card .result-actions button:hover {
+      border-color: var(--accent); color: var(--accent);
+    }
+
+    /* Progress */
+    .progress-bar-container { margin-top: 1rem; display: none; }
+    .progress-bar-container.visible { display: block; }
+    .progress-bar-outer {
+      background: var(--bg-primary); border-radius: 999px; height: 8px;
+      overflow: hidden; border: 1px solid var(--border);
+    }
+    .progress-bar-inner {
+      height: 100%; background: var(--accent); border-radius: 999px;
+      transition: width 0.15s; width: 0%;
+    }
+    .progress-text {
+      font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; text-align: center;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 640px) {
+      .prompt-table .col-aspect, .prompt-table .col-size, .prompt-table .col-fmt { width: 70px; }
+      .api-key-input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../../" class="site-logo">
+        <span class="logo-icon">&#9881;</span> ClaudeTools
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="../../#tools">Tools</a></li>
+          <li><a href="https://github.com/imakefun/ClaudeTools">GitHub</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="app-container">
+    <h1>Bulk Image Generator</h1>
+    <p class="subtitle">Generate images in bulk using Google Gemini (Nano Banana) from a list of prompts.</p>
+
+    <!-- API Settings -->
+    <div class="panel">
+      <h2>API Settings</h2>
+      <div class="settings-row">
+        <div class="field">
+          <label>Gemini API Key</label>
+          <input type="password" class="api-key-input" id="apiKeyInput" placeholder="Enter your Gemini API key">
+        </div>
+        <div class="field">
+          <label>Model</label>
+          <select id="modelSelect">
+            <option value="gemini-2.5-flash-preview-image-generation">Gemini 2.5 Flash Image</option>
+            <option value="gemini-2.0-flash-exp-image-generation">Gemini 2.0 Flash Exp</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Delay between requests (ms)</label>
+          <input type="number" id="delayInput" value="1000" min="0" max="30000" style="width:100px">
+        </div>
+      </div>
+      <p class="key-hint">Your key is stored in your browser only and sent directly to Google's API. Get one at <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>.</p>
+    </div>
+
+    <!-- Prompt List -->
+    <div class="panel">
+      <h2>Prompts</h2>
+
+      <div class="table-toolbar">
+        <button class="toolbar-btn accent" id="btnAddRow">+ Add Row</button>
+        <button class="toolbar-btn" id="btnImport">Import List</button>
+        <div class="toolbar-separator"></div>
+        <button class="toolbar-btn" id="btnClearAll">Clear All</button>
+        <div style="flex:1"></div>
+        <span style="font-size:0.78rem; color:var(--text-muted)" id="rowCount">0 prompts</span>
+      </div>
+
+      <div class="prompt-table-wrap">
+        <table class="prompt-table">
+          <thead>
+            <tr>
+              <th class="col-num">#</th>
+              <th class="col-prompt">Prompt / Description</th>
+              <th class="col-aspect">Aspect</th>
+              <th class="col-size">Output Size</th>
+              <th class="col-fmt">Format</th>
+              <th class="col-status">Status</th>
+              <th class="col-actions"></th>
+            </tr>
+          </thead>
+          <tbody id="promptTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Generate -->
+    <button class="toolbar-btn accent" id="btnGenerate" disabled style="width:100%; padding:0.75rem; font-size:1rem; font-weight:600;">
+      Generate All
+    </button>
+    <button class="toolbar-btn hidden" id="btnStop" style="width:100%; padding:0.75rem; font-size:1rem; font-weight:600; margin-top:0.5rem; border-color:#f85149; color:#f85149;">
+      Stop
+    </button>
+
+    <div class="progress-bar-container" id="progressContainer">
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="progressBar"></div></div>
+      <div class="progress-text" id="progressText">0 / 0</div>
+    </div>
+
+    <!-- Results -->
+    <div class="panel hidden" id="resultsPanel" style="margin-top:1.5rem">
+      <h2 style="display:flex; justify-content:space-between; align-items:center;">
+        Results
+        <button class="toolbar-btn" id="btnDownloadAll">Download All as ZIP</button>
+      </h2>
+      <div class="results-grid" id="resultsGrid"></div>
+    </div>
+  </main>
+
+  <!-- Import Modal -->
+  <div class="import-overlay hidden" id="importOverlay">
+    <div class="import-modal">
+      <h3>Import Prompt List</h3>
+      <p>One prompt per line. Optionally add <code>| aspect | size | format</code> after each prompt.<br>
+        Example: <code>A fantasy castle at sunset | 16:9 | 1024x576 | png</code></p>
+      <textarea id="importTextarea" placeholder="A dragon flying over mountains&#10;A serene lake at dawn | 1:1 | 512x512 | png&#10;Cyberpunk city street | 16:9"></textarea>
+      <div class="modal-actions">
+        <button class="toolbar-btn" id="btnImportCancel">Cancel</button>
+        <button class="toolbar-btn accent" id="btnImportConfirm">Import</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <p>ClaudeTools &mdash; built one tool at a time.</p>
+  </footer>
+
+  <script>
+    (() => {
+      "use strict";
+
+      // ===== State =====
+      let rows = [];       // { id, prompt, aspect, outputSize, format, status, result, error }
+      let nextId = 1;
+      let generating = false;
+      let stopRequested = false;
+
+      // ===== DOM =====
+      const apiKeyInput = document.getElementById("apiKeyInput");
+      const modelSelect = document.getElementById("modelSelect");
+      const delayInput = document.getElementById("delayInput");
+      const promptTableBody = document.getElementById("promptTableBody");
+      const rowCount = document.getElementById("rowCount");
+      const btnAddRow = document.getElementById("btnAddRow");
+      const btnImport = document.getElementById("btnImport");
+      const btnClearAll = document.getElementById("btnClearAll");
+      const btnGenerate = document.getElementById("btnGenerate");
+      const btnStop = document.getElementById("btnStop");
+      const progressContainer = document.getElementById("progressContainer");
+      const progressBar = document.getElementById("progressBar");
+      const progressText = document.getElementById("progressText");
+      const resultsPanel = document.getElementById("resultsPanel");
+      const resultsGrid = document.getElementById("resultsGrid");
+      const btnDownloadAll = document.getElementById("btnDownloadAll");
+      const importOverlay = document.getElementById("importOverlay");
+      const importTextarea = document.getElementById("importTextarea");
+      const btnImportCancel = document.getElementById("btnImportCancel");
+      const btnImportConfirm = document.getElementById("btnImportConfirm");
+
+      // ===== Persist API key =====
+      const savedKey = localStorage.getItem("claudetools_gemini_key");
+      if (savedKey) apiKeyInput.value = savedKey;
+      apiKeyInput.addEventListener("change", () => {
+        localStorage.setItem("claudetools_gemini_key", apiKeyInput.value.trim());
+      });
+
+      // ===== Row Management =====
+
+      function createRow(prompt = "", aspect = "1:1", outputSize = "", format = "png") {
+        const row = {
+          id: nextId++,
+          prompt,
+          aspect,
+          outputSize,
+          format,
+          status: "pending",
+          result: null,  // { base64, mimeType }
+          error: null,
+        };
+        rows.push(row);
+        return row;
+      }
+
+      function removeRow(id) {
+        rows = rows.filter((r) => r.id !== id);
+        renderTable();
+      }
+
+      function renderTable() {
+        promptTableBody.innerHTML = "";
+        rows.forEach((row, i) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td class="col-num">${i + 1}</td>
+            <td class="col-prompt">
+              <textarea data-field="prompt">${escapeHtml(row.prompt)}</textarea>
+            </td>
+            <td class="col-aspect">
+              <select data-field="aspect">
+                <option value="1:1" ${row.aspect === "1:1" ? "selected" : ""}>1:1</option>
+                <option value="4:3" ${row.aspect === "4:3" ? "selected" : ""}>4:3</option>
+                <option value="3:4" ${row.aspect === "3:4" ? "selected" : ""}>3:4</option>
+                <option value="16:9" ${row.aspect === "16:9" ? "selected" : ""}>16:9</option>
+                <option value="9:16" ${row.aspect === "9:16" ? "selected" : ""}>9:16</option>
+              </select>
+            </td>
+            <td class="col-size">
+              <input type="text" data-field="outputSize" value="${escapeHtml(row.outputSize)}" placeholder="e.g. 512x512">
+            </td>
+            <td class="col-fmt">
+              <select data-field="format">
+                <option value="png" ${row.format === "png" ? "selected" : ""}>PNG</option>
+                <option value="jpg" ${row.format === "jpg" ? "selected" : ""}>JPG</option>
+                <option value="webp" ${row.format === "webp" ? "selected" : ""}>WEBP</option>
+              </select>
+            </td>
+            <td class="col-status">
+              <span class="status-badge ${row.status}" title="${row.error || ""}">${statusLabel(row.status)}</span>
+            </td>
+            <td class="col-actions">
+              <button class="row-remove" title="Remove">&times;</button>
+            </td>
+          `;
+
+          // Bind inputs
+          tr.querySelectorAll("[data-field]").forEach((el) => {
+            const field = el.dataset.field;
+            const evt = el.tagName === "TEXTAREA" || el.tagName === "INPUT" ? "input" : "change";
+            el.addEventListener(evt, () => { row[field] = el.value; });
+          });
+
+          tr.querySelector(".row-remove").addEventListener("click", () => removeRow(row.id));
+          promptTableBody.appendChild(tr);
+        });
+
+        rowCount.textContent = rows.length + " prompt" + (rows.length !== 1 ? "s" : "");
+        btnGenerate.disabled = rows.length === 0 || generating;
+      }
+
+      function statusLabel(s) {
+        if (s === "pending") return "Pending";
+        if (s === "generating") return "Running";
+        if (s === "done") return "Done";
+        if (s === "error") return "Error";
+        return s;
+      }
+
+      function escapeHtml(s) {
+        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      }
+
+      // ===== Add / Clear =====
+
+      btnAddRow.addEventListener("click", () => {
+        createRow();
+        renderTable();
+        // Focus the new textarea
+        const textareas = promptTableBody.querySelectorAll("textarea");
+        if (textareas.length) textareas[textareas.length - 1].focus();
+      });
+
+      btnClearAll.addEventListener("click", () => {
+        rows = [];
+        renderTable();
+        resultsPanel.classList.add("hidden");
+        resultsGrid.innerHTML = "";
+      });
+
+      // ===== Import =====
+
+      btnImport.addEventListener("click", () => importOverlay.classList.remove("hidden"));
+      btnImportCancel.addEventListener("click", () => importOverlay.classList.add("hidden"));
+      importOverlay.addEventListener("click", (e) => {
+        if (e.target === importOverlay) importOverlay.classList.add("hidden");
+      });
+
+      btnImportConfirm.addEventListener("click", () => {
+        const text = importTextarea.value.trim();
+        if (!text) return;
+        const lines = text.split("\n").filter((l) => l.trim());
+        for (const line of lines) {
+          const parts = line.split("|").map((p) => p.trim());
+          const prompt = parts[0] || "";
+          const aspect = parts[1] && ["1:1","4:3","3:4","16:9","9:16"].includes(parts[1]) ? parts[1] : "1:1";
+          const outputSize = parts[2] || "";
+          const format = parts[3] && ["png","jpg","webp"].includes(parts[3].toLowerCase()) ? parts[3].toLowerCase() : "png";
+          if (prompt) createRow(prompt, aspect, outputSize, format);
+        }
+        importTextarea.value = "";
+        importOverlay.classList.add("hidden");
+        renderTable();
+      });
+
+      // ===== Generate =====
+
+      btnGenerate.addEventListener("click", startGeneration);
+      btnStop.addEventListener("click", () => { stopRequested = true; });
+
+      async function startGeneration() {
+        const apiKey = apiKeyInput.value.trim();
+        if (!apiKey) {
+          alert("Please enter your Gemini API key.");
+          apiKeyInput.focus();
+          return;
+        }
+
+        const pendingRows = rows.filter((r) => r.status !== "done");
+        if (pendingRows.length === 0) {
+          alert("No pending prompts to generate.");
+          return;
+        }
+
+        generating = true;
+        stopRequested = false;
+        btnGenerate.disabled = true;
+        btnStop.classList.remove("hidden");
+        progressContainer.classList.add("visible");
+
+        const model = modelSelect.value;
+        const delay = parseInt(delayInput.value, 10) || 1000;
+        let completed = 0;
+        const total = pendingRows.length;
+
+        for (const row of pendingRows) {
+          if (stopRequested) break;
+
+          row.status = "generating";
+          row.error = null;
+          updateRowStatus(row);
+          progressBar.style.width = ((completed / total) * 100) + "%";
+          progressText.textContent = `${completed} / ${total}`;
+
+          try {
+            const result = await callGeminiApi(apiKey, model, row.prompt, row.aspect);
+            row.result = result;
+            row.status = "done";
+          } catch (err) {
+            row.status = "error";
+            row.error = err.message || "Unknown error";
+          }
+
+          updateRowStatus(row);
+          completed++;
+          progressBar.style.width = ((completed / total) * 100) + "%";
+          progressText.textContent = `${completed} / ${total}`;
+
+          // Delay between requests
+          if (completed < total && !stopRequested) {
+            await sleep(delay);
+          }
+        }
+
+        generating = false;
+        btnGenerate.disabled = false;
+        btnStop.classList.add("hidden");
+        progressText.textContent = stopRequested ? `Stopped at ${completed} / ${total}` : "Done!";
+
+        setTimeout(() => {
+          progressContainer.classList.remove("visible");
+          progressBar.style.width = "0%";
+        }, 3000);
+
+        renderResults();
+      }
+
+      function updateRowStatus(row) {
+        const idx = rows.indexOf(row);
+        if (idx === -1) return;
+        const tr = promptTableBody.children[idx];
+        if (!tr) return;
+        const badge = tr.querySelector(".status-badge");
+        if (badge) {
+          badge.className = "status-badge " + row.status;
+          badge.textContent = statusLabel(row.status);
+          badge.title = row.error || "";
+        }
+      }
+
+      async function callGeminiApi(apiKey, model, prompt, aspectRatio) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+        const body = {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseModalities: ["TEXT", "IMAGE"],
+          },
+        };
+
+        const resp = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+        if (!resp.ok) {
+          const errBody = await resp.text();
+          let msg = `API error ${resp.status}`;
+          try {
+            const errJson = JSON.parse(errBody);
+            msg = errJson.error?.message || msg;
+          } catch {}
+          throw new Error(msg);
+        }
+
+        const data = await resp.json();
+        const parts = data.candidates?.[0]?.content?.parts || [];
+
+        for (const part of parts) {
+          if (part.inlineData) {
+            return {
+              base64: part.inlineData.data,
+              mimeType: part.inlineData.mimeType || "image/png",
+            };
+          }
+        }
+
+        throw new Error("No image returned by the API");
+      }
+
+      function sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      // ===== Results =====
+
+      function renderResults() {
+        const doneRows = rows.filter((r) => r.status === "done" && r.result);
+        if (doneRows.length === 0) {
+          resultsPanel.classList.add("hidden");
+          return;
+        }
+        resultsPanel.classList.remove("hidden");
+        resultsGrid.innerHTML = "";
+
+        doneRows.forEach((row) => {
+          const dataUrl = `data:${row.result.mimeType};base64,${row.result.base64}`;
+          const card = document.createElement("div");
+          card.className = "result-card";
+          card.innerHTML = `
+            <img src="${dataUrl}" alt="${escapeHtml(row.prompt)}">
+            <div class="result-info">
+              <div class="result-prompt" title="${escapeHtml(row.prompt)}">${escapeHtml(row.prompt)}</div>
+              <div class="result-actions">
+                <button class="dl-btn">Download</button>
+              </div>
+            </div>
+          `;
+          card.querySelector(".dl-btn").addEventListener("click", () => downloadSingle(row));
+          resultsGrid.appendChild(card);
+        });
+      }
+
+      async function downloadSingle(row) {
+        const blob = await convertResult(row);
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        const safeName = row.prompt.replace(/[^a-zA-Z0-9_\- ]/g, "").trim().replace(/\s+/g, "_").slice(0, 60);
+        a.download = (safeName || "image") + "." + row.format;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(a.href);
+      }
+
+      async function convertResult(row) {
+        const dataUrl = `data:${row.result.mimeType};base64,${row.result.base64}`;
+
+        // If no conversion or resize needed and format is png
+        const needsConvert = row.format !== "png" || row.outputSize;
+        if (!needsConvert) {
+          const byteStr = atob(row.result.base64);
+          const arr = new Uint8Array(byteStr.length);
+          for (let i = 0; i < byteStr.length; i++) arr[i] = byteStr.charCodeAt(i);
+          return new Blob([arr], { type: row.result.mimeType });
+        }
+
+        // Use canvas for conversion/resize
+        const img = await loadImageFromUrl(dataUrl);
+        let w = img.naturalWidth;
+        let h = img.naturalHeight;
+
+        // Parse output size
+        if (row.outputSize) {
+          const m = row.outputSize.match(/^(\d+)\s*[xX\u00d7]\s*(\d+)$/);
+          if (m) {
+            w = parseInt(m[1], 10);
+            h = parseInt(m[2], 10);
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+
+        const mimeMap = { png: "image/png", jpg: "image/jpeg", webp: "image/webp" };
+        const mime = mimeMap[row.format] || "image/png";
+        const quality = mime === "image/png" ? undefined : 0.92;
+
+        return new Promise((resolve) => canvas.toBlob(resolve, mime, quality));
+      }
+
+      function loadImageFromUrl(url) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error("Failed to load image"));
+          img.src = url;
+        });
+      }
+
+      // ===== Download All =====
+
+      btnDownloadAll.addEventListener("click", async () => {
+        const doneRows = rows.filter((r) => r.status === "done" && r.result);
+        if (doneRows.length === 0) return;
+
+        btnDownloadAll.disabled = true;
+        btnDownloadAll.textContent = "Zipping...";
+
+        const zip = new JSZip();
+        const usedNames = new Set();
+
+        for (const row of doneRows) {
+          const blob = await convertResult(row);
+          const safeName = row.prompt.replace(/[^a-zA-Z0-9_\- ]/g, "").trim().replace(/\s+/g, "_").slice(0, 60);
+          let filename = (safeName || "image") + "." + row.format;
+
+          let base = filename;
+          let counter = 2;
+          while (usedNames.has(filename.toLowerCase())) {
+            const dot = base.lastIndexOf(".");
+            filename = base.slice(0, dot) + "_" + counter + base.slice(dot);
+            counter++;
+          }
+          usedNames.add(filename.toLowerCase());
+
+          zip.file(filename, blob);
+        }
+
+        const zipBlob = await zip.generateAsync({ type: "blob" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(zipBlob);
+        a.download = "generated_images.zip";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(a.href);
+
+        btnDownloadAll.disabled = false;
+        btnDownloadAll.textContent = "Download All as ZIP";
+      });
+
+      // ===== Init =====
+      // Start with one empty row
+      createRow();
+      renderTable();
+    })();
+  </script>
+
+</body>
+</html>
